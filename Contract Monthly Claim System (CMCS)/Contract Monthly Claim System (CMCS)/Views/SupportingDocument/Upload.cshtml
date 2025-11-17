@@ -1,0 +1,239 @@
+﻿@{
+    ViewData["Title"] = "Upload Supporting Documents";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-upload me-2 text-primary"></i>
+                        Upload Supporting Documents
+                    </h2>
+                    <p class="text-muted mb-0">Upload documents for Claim #@ViewBag.ClaimID</p>
+                </div>
+                <a asp-controller="Claim" asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Claims
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-upload me-2"></i>
+                        Upload New Document
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UploadFile" asp-route-claimId="@ViewBag.ClaimID" method="post" enctype="multipart/form-data" id="uploadForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-4">
+                            <label for="file" class="form-label fw-bold">
+                                <i class="fas fa-file me-1 text-primary"></i>
+                                Select File
+                            </label>
+                            <input type="file" class="form-control form-control-lg" id="file" name="file" accept=".pdf,.docx,.xlsx,.doc,.xls" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Allowed file types: PDF, DOCX, XLSX, DOC, XLS (Max size: 10MB)
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary btn-lg px-5" id="uploadBtn">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Document
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Upload Guidelines
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>File Size:</strong> Maximum 10MB
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>File Types:</strong> PDF, DOCX, XLSX, DOC, XLS
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Security:</strong> Files are securely stored
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Linking:</strong> Automatically linked to your claim
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Uploaded Documents Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder me-2"></i>
+                        Uploaded Documents
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="documentsList">
+                        <div class="text-center py-3">
+                            <i class="fas fa-spinner fa-spin me-2"></i>
+                            Loading documents...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDocuments();
+
+            // File input change handler
+            document.getElementById('file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate file size (10MB)
+                    if (file.size > 10 * 1024 * 1024) {
+                        alert('File size exceeds 10MB limit!');
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Validate file type
+                    const allowedTypes = ['.pdf', '.docx', '.xlsx', '.doc', '.xls'];
+                    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                    if (!allowedTypes.includes(fileExtension)) {
+                        alert('File type not allowed! Please select a PDF, DOCX, XLSX, DOC, or XLS file.');
+                        e.target.value = '';
+                        return;
+                    }
+
+                    console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+                }
+            });
+
+            // Form submission handler
+            document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                const fileInput = document.getElementById('file');
+                if (!fileInput.files[0]) {
+                    e.preventDefault();
+                    alert('Please select a file to upload.');
+                    return;
+                }
+
+                // Show loading state
+                const uploadBtn = document.getElementById('uploadBtn');
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+                uploadBtn.disabled = true;
+            });
+        });
+
+        function loadDocuments() {
+            const claimId = @ViewBag.ClaimID;
+
+            fetch(`/SupportingDocument/GetDocumentsForClaim?claimId=${claimId}`)
+                .then(response => response.json())
+                .then(documents => {
+                    displayDocuments(documents);
+                })
+                .catch(error => {
+                    console.error('Error loading documents:', error);
+                    document.getElementById('documentsList').innerHTML =
+                        '<div class="text-center py-3 text-muted">Error loading documents</div>';
+                });
+        }
+
+        function displayDocuments(documents) {
+            const container = document.getElementById('documentsList');
+
+            if (documents.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-folder-open text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted">No documents uploaded yet</h5>
+                        <p class="text-muted">Upload your first supporting document above.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="row">';
+            documents.forEach(doc => {
+                const fileSize = (doc.fileSize / 1024).toFixed(1) + ' KB';
+                const uploadDate = new Date(doc.uploadDate).toLocaleDateString();
+
+                html += `
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                                    <strong class="text-truncate">${doc.fileName}</strong>
+                                </div>
+                                <div class="small text-muted">
+                                    <div><i class="fas fa-weight me-1"></i>${fileSize}</div>
+                                    <div><i class="fas fa-calendar me-1"></i>${uploadDate}</div>
+                                </div>
+                                <div class="mt-2">
+                                    <a href="${doc.filePath}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+    </script>
+}

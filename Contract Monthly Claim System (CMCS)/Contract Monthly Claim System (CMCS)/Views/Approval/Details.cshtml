@@ -1,0 +1,32 @@
+﻿@model Contract_Monthly_Claim_System__CMCS_.Models.Approval
+@{
+    ViewData["Title"] = "Approval Details";
+}
+
+<h2>Approval Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-2">Approval ID</dt>
+            <dd class="col-sm-10">@Model.ApprovalID</dd>
+
+            <dt class="col-sm-2">Approval Date</dt>
+            <dd class="col-sm-10">@Model.ApprovalDate.ToShortDateString()</dd>
+
+            <dt class="col-sm-2">Comments</dt>
+            <dd class="col-sm-10">@Model.Comments</dd>
+
+            <dt class="col-sm-2">Claim ID</dt>
+            <dd class="col-sm-10">@Model.ClaimID</dd>
+
+            <dt class="col-sm-2">Approver ID</dt>
+            <dd class="col-sm-10">@Model.ApproverID</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-3">
+    <button type="button" class="btn btn-warning" onclick="alert('Modify functionality would open here. This is a non-functional prototype.')">Modify</button>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

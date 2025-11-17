@@ -1,0 +1,62 @@
+[
+  {
+    "documentID": 0,
+    "fileName": "",
+    "filePath": "",
+    "fileSize": 0,
+    "contentType": "",
+    "uploadDate": "0001-01-01T00:00:00",
+    "claimID": 0,
+    "claim": null
+  },
+  {
+    "documentID": 0,
+    "fileName": "",
+    "filePath": "",
+    "fileSize": 0,
+    "contentType": "",
+    "uploadDate": "0001-01-01T00:00:00",
+    "claimID": 0,
+    "claim": null
+  },
+  {
+    "documentID": 0,
+    "fileName": "",
+    "filePath": "",
+    "fileSize": 0,
+    "contentType": "",
+    "uploadDate": "0001-01-01T00:00:00",
+    "claimID": 0,
+    "claim": null
+  },
+  {
+    "documentID": 0,
+    "fileName": "",
+    "filePath": "",
+    "fileSize": 0,
+    "contentType": "",
+    "uploadDate": "0001-01-01T00:00:00",
+    "claimID": 0,
+    "claim": null
+  },
+  {
+    "documentID": 0,
+    "fileName": "",
+    "filePath": "",
+    "fileSize": 0,
+    "contentType": "",
+    "uploadDate": "0001-01-01T00:00:00",
+    "claimID": 0,
+    "claim": null
+  },
+  {
+    "documentID": 1,
+    "fileName": "Programming 2B PROG6212 POE Part 1 ST10446648 Orearabetse Riba.docx",
+    "filePath": "/uploads/documents/d7eac3fa-76b6-4fe4-80d6-a6861d9ec6a1.docx",
+    "fileSize": 96048,
+    "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "uploadDate": "2025-10-23T01:03:06.0969267+02:00",
+    "claimID": 0,
+    "claim": null
+  }
+]

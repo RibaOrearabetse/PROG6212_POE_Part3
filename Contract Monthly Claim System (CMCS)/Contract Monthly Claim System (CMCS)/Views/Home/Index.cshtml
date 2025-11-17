@@ -1,0 +1,118 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container-fluid px-4 py-5">
+    <div class="row align-items-center py-5 bg-light rounded-3 mb-5">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold text-primary">Welcome to CMCS</h1>
+            <p class="lead fs-4">Contract Monthly Claim System</p>
+            <p class="mb-4">Streamline your contract management and claim processing with our efficient, user-friendly platform.</p>
+            <div class="d-grid gap-2 d-md-flex">
+                <a href="@Url.Action("Create", "Claim")" class="btn btn-primary btn-lg px-4 me-md-2">
+                    <i class="fas fa-plus-circle me-2"></i>Submit New Claim
+                </a>
+                <a href="@Url.Action("Index", "Claim")" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-list me-2"></i>View My Claims
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center">
+            <div class="bg-primary rounded-circle p-5 d-inline-block">
+                <i class="fas fa-file-invoice-dollar text-white" style="font-size: 3rem;"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">System Overview</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <i class="fas fa-users text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h4 class="card-title">@(ViewBag.TotalUsers ?? 0)</h4>
+                    <p class="card-text text-muted">Active Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <i class="fas fa-file-alt text-warning mb-3" style="font-size: 2rem;"></i>
+                    <h4 class="card-title">@(ViewBag.TotalClaims ?? 0)</h4>
+                    <p class="card-text text-muted">Total Claims</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <i class="fas fa-check-circle text-success mb-3" style="font-size: 2rem;"></i>
+                    <h4 class="card-title">@(ViewBag.ApprovedClaims ?? 0)</h4>
+                    <p class="card-text text-muted">Approved Claims</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <i class="fas fa-clock text-info mb-3" style="font-size: 2rem;"></i>
+                    <h4 class="card-title">@(ViewBag.PendingClaims ?? 0)</h4>
+                    <p class="card-text text-muted">Pending Review</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Quick Access</h3>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-upload text-primary mb-3" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title">Submit Claims</h5>
+                    <p class="card-text">Submit your monthly contract claims for processing and approval.</p>
+                    <a href="@Url.Action("Create", "Claim")" class="btn btn-primary mt-3">Get Started</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line text-success mb-3" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title">Track Progress</h5>
+                    <p class="card-text">Monitor the status of your submitted claims and view history.</p>
+                    <a href="@Url.Action("Index", "Claim")" class="btn btn-success mt-3">View Claims</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-cog text-info mb-3" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title">Manage Account</h5>
+                    <p class="card-text">Update your profile and manage your account settings.</p>
+                    <a href="@Url.Action("Index", "User")" class="btn btn-info mt-3">Manage</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <div class="bg-light rounded-3 p-4">
+                <h4 class="mb-3">Need Help?</h4>
+                <p class="mb-3">Our support team is here to help you with any questions about the claim process.</p>
+                <a href="#" class="btn btn-outline-primary">
+                    <i class="fas fa-question-circle me-2"></i>Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

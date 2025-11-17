@@ -1,0 +1,168 @@
+﻿@model Contract_Monthly_Claim_System__CMCS_.Models.Approval
+@{
+    ViewData["Title"] = "Edit Approval";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-edit me-2 text-warning"></i>
+                        Edit Approval
+                    </h2>
+                    <p class="text-muted mb-0">Modify approval details and comments</p>
+                </div>
+                <div class="badge bg-info fs-6">
+                    <i class="fas fa-id-badge me-1"></i>
+                    Approval #@Model.ApprovalID
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Approval Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="/Approval/Edit/@Model.ApprovalID" method="post" id="editApprovalForm">
+                        @Html.AntiForgeryToken()
+                        <div class="alert alert-danger" id="errorMessage" style="display: none;"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Approval ID</label>
+                                <input type="text" class="form-control" value="@Model.ApprovalID" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Approval Date</label>
+                                <input type="text" class="form-control" value="@Model.ApprovalDate.ToString("MMM dd, yyyy")" readonly />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Claim ID</label>
+                                <input type="text" class="form-control" value="@Model.ClaimID" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Approver ID</label>
+                                <input type="text" class="form-control" value="@Model.ApproverID" readonly />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="comments" class="form-label">Comments <span class="text-danger">*</span></label>
+                            <textarea name="comments" id="comments" class="form-control" rows="4" required
+                                      placeholder="Enter approval comments...">@Model.Comments</textarea>
+                            <div class="form-text">Provide detailed comments about this approval decision.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i>
+                                Update Approval
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Approval Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5">Approval ID:</dt>
+                        <dd class="col-7">@Model.ApprovalID</dd>
+
+                        <dt class="col-5">Date:</dt>
+                        <dd class="col-7">@Model.ApprovalDate.ToString("MMM dd, yyyy")</dd>
+
+                        <dt class="col-5">Claim ID:</dt>
+                        <dd class="col-7">@Model.ClaimID</dd>
+
+                        <dt class="col-5">Approver:</dt>
+                        <dd class="col-7">@Model.ApproverID</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0 small">
+                        <li><i class="fas fa-check text-success me-2"></i>Be specific in your comments</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Include reasoning for decisions</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Mention any conditions or requirements</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.getElementById('editApprovalForm').addEventListener('submit', function(e) {
+            const comments = document.getElementById('comments').value.trim();
+
+            // Simple validation
+            if (!comments) {
+                e.preventDefault();
+                document.getElementById('errorMessage').innerHTML = 'Please enter approval comments.';
+                document.getElementById('errorMessage').style.display = 'block';
+                return false;
+            }
+
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
+            submitBtn.disabled = true;
+        });
+    </script>
+}

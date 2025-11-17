@@ -1,0 +1,22 @@
+[
+  {
+    "roleID": 1,
+    "roleName": "Lecturer",
+    "users": []
+  },
+  {
+    "roleID": 2,
+    "roleName": "Coordinator",
+    "users": []
+  },
+  {
+    "roleID": 3,
+    "roleName": "Manager",
+    "users": []
+  },
+  {
+    "roleID": 4,
+    "roleName": "Administrator",
+    "users": []
+  }
+]

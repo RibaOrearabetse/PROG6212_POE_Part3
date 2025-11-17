@@ -1,0 +1,62 @@
+[
+  {
+    "userID": 1,
+    "firstName": "Ore",
+    "lastName": "Roberts",
+    "email": "Riba@gmail.com",
+    "passwordHash": "default_password_hash",
+    "contactNumber": "0828761643",
+    "roleID": 2,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 2,
+    "firstName": "Khumo",
+    "lastName": "Thato",
+    "email": "khumo.t@university.edu",
+    "passwordHash": "",
+    "contactNumber": "098-765-4321",
+    "roleID": 2,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 3,
+    "firstName": "Mike",
+    "lastName": "Johnson",
+    "email": "mike.johnson@university.edu",
+    "passwordHash": "",
+    "contactNumber": "555-123-4567",
+    "roleID": 1,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 4,
+    "firstName": "Sarah",
+    "lastName": "Williams",
+    "email": "sarah.williams@university.edu",
+    "passwordHash": "",
+    "contactNumber": "444-987-6543",
+    "roleID": 3,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 5,
+    "firstName": "User",
+    "lastName": "5",
+    "email": "User5@gmail.com",
+    "passwordHash": "default_password_hash",
+    "contactNumber": "0778889999",
+    "roleID": 4,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  }
+]

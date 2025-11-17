@@ -1,0 +1,65 @@
+[
+  {
+    "ApprovalID": 1,
+    "ApprovalDate": "2025-10-20T00:17:52.8268923+02:00",
+    "Comments": "Approved - documentation complete",
+    "ClaimID": 2,
+    "Claim": null,
+    "ApproverID": 4,
+    "Approver": null
+  },
+  {
+    "ApprovalID": 2,
+    "ApprovalDate": "2025-10-13T00:17:52.8271558+02:00",
+    "Comments": "Rejected - insufficient documentation",
+    "ClaimID": 3,
+    "Claim": null,
+    "ApproverID": 3,
+    "Approver": null
+  },
+  {
+    "ApprovalID": 3,
+    "ApprovalDate": "2025-10-22T00:17:52.8271586+02:00",
+    "Comments": "Approved with conditions",
+    "ClaimID": 1,
+    "Claim": null,
+    "ApproverID": 4,
+    "Approver": null
+  },
+  {
+    "ApprovalID": 4,
+    "ApprovalDate": "2025-10-23T00:22:53.6022926+02:00",
+    "Comments": "Approved by coordinator/manager",
+    "ClaimID": 1,
+    "Claim": null,
+    "ApproverID": 1,
+    "Approver": null
+  },
+  {
+    "ApprovalID": 5,
+    "ApprovalDate": "2025-10-23T00:23:27.8101841+02:00",
+    "Comments": "Failed",
+    "ClaimID": 1,
+    "Claim": null,
+    "ApproverID": 1,
+    "Approver": null
+  },
+  {
+    "ApprovalID": 6,
+    "ApprovalDate": "2025-10-24T10:24:53.920455+02:00",
+    "Comments": "Approved by coordinator/manager",
+    "ClaimID": 1,
+    "Claim": null,
+    "ApproverID": 1,
+    "Approver": null
+  },
+  {
+    "ApprovalID": 7,
+    "ApprovalDate": "2025-10-24T10:25:18.6989724+02:00",
+    "Comments": "Failure",
+    "ClaimID": 4,
+    "Claim": null,
+    "ApproverID": 1,
+    "Approver": null
+  }
+]

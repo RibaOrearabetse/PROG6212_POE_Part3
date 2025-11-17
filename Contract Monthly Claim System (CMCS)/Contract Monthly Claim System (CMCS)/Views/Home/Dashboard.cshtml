@@ -1,0 +1,113 @@
+﻿@using Contract_Monthly_Claim_System__CMCS_.Models
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2>Dashboard</h2>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Claims</h5>
+                <h2>@(ViewBag.TotalClaims ?? 0)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Pending</h5>
+                <h2>@(ViewBag.PendingClaims ?? 0)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Approved</h5>
+                <h2>@(ViewBag.ApprovedClaims ?? 0)</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Rejected</h5>
+                <h2>@(ViewBag.RejectedClaims ?? 0)</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h4>Recent Claims</h4>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Claim ID</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.RecentClaims != null)
+                    {
+                        @foreach (var claim in ViewBag.RecentClaims)
+                        {
+                            <tr>
+                                <td>@claim.ClaimID</td>
+                                <td>@claim.ClaimDate.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    @if (claim.ClaimStatus == "Pending")
+                                    {
+                                        <span class="status-pending">Pending</span>
+                                    }
+                                    else if (claim.ClaimStatus == "Approved")
+                                    {
+                                        <span class="status-approved">Approved</span>
+                                    }
+                                    else if (claim.ClaimStatus == "Rejected")
+                                    {
+                                        <span class="status-rejected">Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@claim.ClaimStatus</span>
+                                    }
+                                </td>
+                                <td>@claim.TotalAmount.ToString("C")</td>
+                            </tr>
+                        }
+                    }
+                    @if (ViewBag.RecentClaims == null || (ViewBag.RecentClaims as List<Claim>)?.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">No claims found</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h4>Quick Actions</h4>
+        <div class="list-group">
+            <a href="@Url.Action("Create", "Claim")" class="list-group-item list-group-item-action">
+                <strong>Submit New Claim</strong><br>
+                <small>Create a new monthly claim submission</small>
+            </a>
+            <a href="@Url.Action("Index", "Approval")" class="list-group-item list-group-item-action">
+                <strong>Review Approvals</strong><br>
+                <small>Process pending claim approvals</small>
+            </a>
+            <a href="@Url.Action("Index", "User")" class="list-group-item list-group-item-action">
+                <strong>Manage Users</strong><br>
+                <small>Add or edit system users</small>
+            </a>
+        </div>
+    </div>
+</div>

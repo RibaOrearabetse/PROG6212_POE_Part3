@@ -1,0 +1,40 @@
+[
+  {
+    "claimID": 1,
+    "claimDate": "2025-11-21T00:00:00",
+    "claimStatus": "Approved",
+    "hoursWorked": 4,
+    "hourlyRate": 100,
+    "totalAmount": 400,
+    "submissionDate": "2025-11-16T02:21:27.0718368+02:00",
+    "lastUpdated": "2025-11-16T02:29:41.4453645+02:00",
+    "statusNotes": "Approved by coordinator/manager",
+    "notes": null,
+    "userID": 1,
+    "user": null,
+    "supportingDocuments": [],
+    "approvals": [],
+    "statusDisplayName": "Approved",
+    "statusBadgeClass": "bg-success",
+    "statusProgress": 100
+  },
+  {
+    "claimID": 2,
+    "claimDate": "2025-11-16T00:00:00",
+    "claimStatus": "Pending",
+    "hoursWorked": 20,
+    "hourlyRate": 500,
+    "totalAmount": 10000,
+    "submissionDate": "2025-11-16T02:34:37.520743+02:00",
+    "lastUpdated": null,
+    "statusNotes": null,
+    "notes": null,
+    "userID": 1,
+    "user": null,
+    "supportingDocuments": [],
+    "approvals": [],
+    "statusDisplayName": "Under Review",
+    "statusBadgeClass": "bg-warning text-dark",
+    "statusProgress": 25
+  }
+]

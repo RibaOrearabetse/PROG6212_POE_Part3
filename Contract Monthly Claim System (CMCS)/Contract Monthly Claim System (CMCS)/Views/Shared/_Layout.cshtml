@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CMCS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c3e50 !important; /* Dark blue-gray */
+        }
+
+        .navbar {
+            background-color: #ecf0f1 !important; /* Light gray-blue */
+            border-bottom: 3px solid #3498db; /* Bright blue accent */
+        }
+
+        .nav-link {
+            color: #2c3e50 !important; /* Dark blue-gray */
+            font-weight: 500;
+            margin: 0 5px;
+            border-radius: 4px;
+            padding: 8px 12px !important;
+        }
+
+            .nav-link:hover {
+                background-color: #3498db;
+                color: white !important;
+            }
+
+        .table th {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .btn-group .btn {
+            margin-right: 5px;
+            border-radius: 4px;
+        }
+
+        .status-pending {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .status-approved {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .status-rejected {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+
+            .btn-primary:hover {
+                background-color: #2980b9;
+                border-color: #2980b9;
+            }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background-color: #2c3e50; /* Dark blue-gray */
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CMCS</a>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="Index">Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Claim" asp-action="Index">Claims</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Claim" asp-action="Create" style="background-color: #e8f4fd; border-radius: 6px;">
+                                <i class="fas fa-plus me-1"></i>Submit Claim
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Approval" asp-action="Index">Approvals</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Approval" asp-action="PendingClaims" style="background-color: #fff3cd; border-radius: 6px;">
+                                <i class="fas fa-clipboard-check me-1"></i>Review Claims
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="SupportingDocument" asp-action="Index">
+                                <i class="fas fa-file-upload me-1"></i>Documents
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Tracking" asp-action="Index" style="background-color: #e8f5e8; border-radius: 6px;">
+                                <i class="fas fa-tasks me-1"></i>Track Claims
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="https://learn.microsoft.com/aspnet/core"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("Styles", required: false)
+</body>
+</html>

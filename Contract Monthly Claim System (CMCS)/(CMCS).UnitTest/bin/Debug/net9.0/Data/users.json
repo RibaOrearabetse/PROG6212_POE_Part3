@@ -1,0 +1,74 @@
+[
+  {
+    "userID": 0,
+    "firstName": "",
+    "lastName": "",
+    "email": "",
+    "passwordHash": "",
+    "contactNumber": "",
+    "roleID": 0,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 0,
+    "firstName": "",
+    "lastName": "",
+    "email": "",
+    "passwordHash": "",
+    "contactNumber": "",
+    "roleID": 0,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 0,
+    "firstName": "",
+    "lastName": "",
+    "email": "",
+    "passwordHash": "",
+    "contactNumber": "",
+    "roleID": 0,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 0,
+    "firstName": "",
+    "lastName": "",
+    "email": "",
+    "passwordHash": "",
+    "contactNumber": "",
+    "roleID": 0,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 0,
+    "firstName": "",
+    "lastName": "",
+    "email": "",
+    "passwordHash": "",
+    "contactNumber": "",
+    "roleID": 0,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 1,
+    "firstName": "Ore",
+    "lastName": "Roberts",
+    "email": "Riba@gmail.com",
+    "passwordHash": "default_password_hash",
+    "contactNumber": "0828761643",
+    "roleID": 2,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  }
+]

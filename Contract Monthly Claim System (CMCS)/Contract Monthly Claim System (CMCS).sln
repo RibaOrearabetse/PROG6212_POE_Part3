@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36429.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contract Monthly Claim System (CMCS)", "Contract Monthly Claim System (CMCS)\Contract Monthly Claim System (CMCS).csproj", "{D2D9F309-6691-4814-AB2A-1516D4C55F77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "(CMCS).UnitTest", "(CMCS).UnitTest\(CMCS).UnitTest.csproj", "{30B94078-A8E4-41AC-8C57-1E69448D1F38}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D2D9F309-6691-4814-AB2A-1516D4C55F77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2D9F309-6691-4814-AB2A-1516D4C55F77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2D9F309-6691-4814-AB2A-1516D4C55F77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2D9F309-6691-4814-AB2A-1516D4C55F77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30B94078-A8E4-41AC-8C57-1E69448D1F38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30B94078-A8E4-41AC-8C57-1E69448D1F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30B94078-A8E4-41AC-8C57-1E69448D1F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30B94078-A8E4-41AC-8C57-1E69448D1F38}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AE99EBDD-E747-4B30-A2F7-43EEA5B428A3}
+	EndGlobalSection
+EndGlobal
