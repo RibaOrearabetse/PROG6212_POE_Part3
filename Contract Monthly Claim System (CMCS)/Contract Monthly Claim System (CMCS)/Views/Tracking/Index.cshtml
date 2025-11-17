@@ -124,8 +124,13 @@
                                                 <small class="text-muted">Submitted: @claim.SubmissionDate.ToString("MMM dd")</small>
                                             </td>
                                             <td>
-                                                <strong class="text-success">@claim.TotalAmount.ToString("C")</strong>
-                                                <div class="small text-muted">@claim.HoursWorked hrs × @claim.HourlyRate.ToString("C")</div>
+                                                <strong class="fw-bold" style="font-size: 1.15em; color: #198754 !important; display: block; margin-bottom: 4px;">
+                                                    R @claim.TotalAmount.ToString("N2")
+                                                </strong>
+                                                <div class="small mt-1" style="color: #6c757d;">
+                                                    @claim.HoursWorked hrs × 
+                                                    <span class="fw-semibold" style="color: #495057;">R @claim.HourlyRate.ToString("N2")</span>
+                                                </div>
                                             </td>
                                             <td class="status-cell">
                                                 <span class="badge @claim.StatusBadgeClass">

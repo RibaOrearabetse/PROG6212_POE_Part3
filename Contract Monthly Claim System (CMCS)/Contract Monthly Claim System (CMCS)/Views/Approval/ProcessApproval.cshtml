@@ -66,11 +66,11 @@
                                 </div>
                                 <div class="mb-2">
                                     <small class="text-muted">Hourly Rate</small>
-                                    <div class="fw-bold">@Model.HourlyRate.ToString("C")</div>
+                                    <div class="fw-bold">R @Model.HourlyRate.ToString("N2")</div>
                                 </div>
                                 <div>
                                     <small class="text-muted">Total Amount</small>
-                                    <div class="h5 text-success fw-bold">@Model.TotalAmount.ToString("C")</div>
+                                    <div class="h5 text-success fw-bold">R @Model.TotalAmount.ToString("N2")</div>
                                 </div>
                             </div>
                         </div>
@@ -131,13 +131,13 @@
                 <div class="card-body">
                     <div class="d-grid gap-3">
                         <button type="button" class="btn btn-success btn-lg"
-                                onclick="approveClaim(@Model.ClaimID, '@Model.TotalAmount.ToString("C")')">
+                                onclick="approveClaim(@Model.ClaimID, 'R @Model.TotalAmount.ToString("N2")')">
                             <i class="fas fa-check me-2"></i>
                             Approve Claim
                         </button>
 
                         <button type="button" class="btn btn-danger btn-lg"
-                                onclick="rejectClaim(@Model.ClaimID, '@Model.TotalAmount.ToString("C")')">
+                                onclick="rejectClaim(@Model.ClaimID, 'R @Model.TotalAmount.ToString("N2")')">
                             <i class="fas fa-times me-2"></i>
                             Reject Claim
                         </button>
@@ -173,7 +173,7 @@
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        You are about to approve this claim for <strong>@Model.TotalAmount.ToString("C")</strong>. Please add any comments below.
+                        You are about to approve this claim for <strong>R @Model.TotalAmount.ToString("N2")</strong>. Please add any comments below.
                     </div>
                     <div class="mb-3">
                         <label for="approvalComments" class="form-label">Comments (Optional)</label>
@@ -208,7 +208,7 @@
                 <div class="modal-body">
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        You are about to reject this claim for <strong>@Model.TotalAmount.ToString("C")</strong>. Please provide a reason for rejection.
+                        You are about to reject this claim for <strong>R @Model.TotalAmount.ToString("N2")</strong>. Please provide a reason for rejection.
                     </div>
                     <div class="mb-3">
                         <label for="rejectionComments" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>

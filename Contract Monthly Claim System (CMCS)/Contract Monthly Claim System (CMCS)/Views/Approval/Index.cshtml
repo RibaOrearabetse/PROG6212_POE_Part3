@@ -54,26 +54,45 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var item in Model)
+                {
+                    // Only display valid approvals (filter out corrupted ones)
+                    @if (item.ApprovalID > 0 && item.ClaimID > 0 && item.ApprovalDate.Year > 2000)
+                    {
+                        <tr>
+                            <td>@item.ApprovalID</td>
+                            <td>@item.ApprovalDate.ToShortDateString()</td>
+                            <td>@(item.Comments ?? "No comments")</td>
+                            <td>@item.ClaimID</td>
+                            <td>@item.ApproverID</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Details" asp-route-id="@item.ApprovalID" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye me-1"></i>
+                                        Details
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.ApprovalID" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit me-1"></i>
+                                        Modify
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                @if (!Model.Any(a => a.ApprovalID > 0 && a.ClaimID > 0 && a.ApprovalDate.Year > 2000))
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">No valid approvals found.</td>
+                    </tr>
+                }
+            }
+            else
             {
                 <tr>
-                    <td>@item.ApprovalID</td>
-                    <td>@item.ApprovalDate.ToShortDateString()</td>
-                    <td>@item.Comments</td>
-                    <td>@item.ClaimID</td>
-                    <td>@item.ApproverID</td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <a asp-action="Details" asp-route-id="@item.ApprovalID" class="btn btn-info btn-sm">
-                                <i class="fas fa-eye me-1"></i>
-                                Details
-                            </a>
-                            <a asp-action="Edit" asp-route-id="@item.ApprovalID" class="btn btn-warning btn-sm">
-                                <i class="fas fa-edit me-1"></i>
-                                Modify
-                            </a>
-                        </div>
-                    </td>
+                    <td colspan="6" class="text-center">No approvals found.</td>
                 </tr>
             }
         </tbody>

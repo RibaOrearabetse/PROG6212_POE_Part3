@@ -26,10 +26,10 @@
             <dd class="col-sm-10">@Model.HoursWorked</dd>
 
             <dt class="col-sm-2">Hourly Rate</dt>
-            <dd class="col-sm-10">@Model.HourlyRate.ToString("C")</dd>
+            <dd class="col-sm-10">R @Model.HourlyRate.ToString("N2")</dd>
 
             <dt class="col-sm-2">Total Amount</dt>
-            <dd class="col-sm-10">@Model.TotalAmount.ToString("C")</dd>
+            <dd class="col-sm-10">R @Model.TotalAmount.ToString("N2")</dd>
 
             <dt class="col-sm-2">Submission Date</dt>
             <dd class="col-sm-10">@Model.SubmissionDate.ToShortDateString()</dd>

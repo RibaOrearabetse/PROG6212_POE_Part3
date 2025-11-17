@@ -10,22 +10,14 @@
                 <div>
                     <h2 class="mb-1">
                         <i class="fas fa-clipboard-check me-2 text-primary"></i>
-                        Pending Claims for Approval
+                        All Claims for Review
                     </h2>
-                    <p class="text-muted mb-0">Review and approve/reject submitted claims</p>
+                    <p class="text-muted mb-0">Review and manage all submitted claims (Pending, Approved, and Rejected)</p>
                 </div>
-                <div class="badge bg-warning text-dark fs-6">
-                    <i class="fas fa-clock me-1"></i>
-                    @Model.Count() Pending Claims
+                <div class="badge bg-primary fs-6">
+                    <i class="fas fa-list me-1"></i>
+                    @Model.Count() Total Claims
                 </div>
-                <button type="button" class="btn btn-info btn-sm ms-2" onclick="testFunction()">
-                    <i class="fas fa-bug me-1"></i>
-                    Test JS
-                </button>
-                <a asp-action="CreateTestClaims" class="btn btn-success btn-sm ms-2">
-                    <i class="fas fa-plus me-1"></i>
-                    Create Test Claims
-                </a>
             </div>
         </div>
     </div>
@@ -119,13 +111,13 @@
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted">Hourly Rate</small>
-                                    <div class="fw-bold">@claim.HourlyRate.ToString("C")</div>
+                                    <div class="fw-bold">R @claim.HourlyRate.ToString("N2")</div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <small class="text-muted">Total Amount</small>
-                                <div class="h5 text-success fw-bold">@claim.TotalAmount.ToString("C")</div>
+                                <div class="h5 text-success fw-bold" data-amount="R @claim.TotalAmount.ToString("N2")">R @claim.TotalAmount.ToString("N2")</div>
                             </div>
 
                             @if (!string.IsNullOrEmpty(claim.Notes))
@@ -143,21 +135,13 @@
                         </div>
                         <div class="card-footer bg-light border-0">
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <a asp-action="ProcessApproval" asp-route-claimId="@claim.ClaimID"
-                                   class="btn btn-outline-info btn-sm">
-                                    <i class="fas fa-eye me-1"></i>
-                                    Review Details
-                                </a>
-
                                 @if (claim.ClaimStatus == "Pending")
                                 {
-                                    <button type="button" class="btn btn-success btn-sm"
-                                            onclick="approveClaim(@claim.ClaimID, '@claim.TotalAmount.ToString("C")')">
+                                    <button type="button" class="btn btn-success btn-sm approve-btn" data-claim-id="@claim.ClaimID" data-amount="R @claim.TotalAmount.ToString("N2")">
                                         <i class="fas fa-check me-1"></i>
                                         Approve
                                     </button>
-                                    <button type="button" class="btn btn-danger btn-sm"
-                                            onclick="rejectClaim(@claim.ClaimID, '@claim.TotalAmount.ToString("C")')">
+                                    <button type="button" class="btn btn-danger btn-sm reject-btn" data-claim-id="@claim.ClaimID" data-amount="R @claim.TotalAmount.ToString("N2")">
                                         <i class="fas fa-times me-1"></i>
                                         Reject
                                     </button>
@@ -191,224 +175,125 @@
             </div>
             <h4 class="text-muted">No Claims Found</h4>
             <p class="text-muted">There are currently no claims to review.</p>
-            <a asp-action="CreateTestClaims" class="btn btn-primary">
+            <a asp-controller="Claim" asp-action="Create" class="btn btn-primary">
                 <i class="fas fa-plus me-1"></i>
-                Create Test Claims
+                Submit New Claim
             </a>
         </div>
     }
 </div>
 
-<!-- Approval Modal -->
-<div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="approvalModalLabel">
-                    <i class="fas fa-check-circle me-2"></i>
-                    Approve Claim
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="approvalForm" method="post">
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        You are about to approve this claim. Please add any comments below.
-                    </div>
-                    <div class="mb-3">
-                        <label for="approvalComments" class="form-label">Comments (Optional)</label>
-                        <textarea class="form-control" id="approvalComments" name="comments" rows="3"
-                                  placeholder="Add any comments about this approval..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check me-1"></i>
-                        Approve Claim
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Rejection Modal -->
-<div class="modal fade" id="rejectionModal" tabindex="-1" aria-labelledby="rejectionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="rejectionModalLabel">
-                    <i class="fas fa-times-circle me-2"></i>
-                    Reject Claim
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="rejectionForm" method="post">
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        You are about to reject this claim. Please provide a reason for rejection.
-                    </div>
-                    <div class="mb-3">
-                        <label for="rejectionComments" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="rejectionComments" name="comments" rows="3" required
-                                  placeholder="Please explain why this claim is being rejected..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times me-1"></i>
-                        Reject Claim
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Hidden form for anti-forgery token -->
+<form style="display: none;" id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>
 
 @section Scripts {
     <script>
-        function approveClaim(claimId, amount) {
-            console.log(`approveClaim called: claimId=${claimId}, amount=${amount}`);
+        // Get anti-forgery token once
+        function getAntiForgeryToken() {
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenInput ? tokenInput.value : '';
+        }
 
-            if (confirm(`Are you sure you want to approve Claim #${claimId} for ${amount}?`)) {
-                const claimCard = document.querySelector(`[data-claim-id="${claimId}"]`);
-                if (!claimCard) {
-                    alert('Claim card not found');
-                    return;
+        // Handle approve button clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.approve-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const button = e.target.closest('.approve-btn');
+                const claimId = parseInt(button.getAttribute('data-claim-id'));
+                const amount = button.getAttribute('data-amount');
+                
+                if (!confirm(`Are you sure you want to approve Claim #${claimId} for ${amount}?`)) {
+                    return false;
                 }
 
-                // Show loading state
-                const approveBtn = claimCard.querySelector('button[onclick*="approveClaim"]');
-                if (approveBtn) {
-                    approveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Approving...';
-                    approveBtn.disabled = true;
-                }
+                const originalText = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Approving...';
 
-                // Make AJAX call with proper form data
-                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
                 const formData = new FormData();
-                formData.append('claimId', claimId);
+                formData.append('claimId', claimId.toString());
                 formData.append('comments', 'Approved by coordinator/manager');
-                formData.append('__RequestVerificationToken', token);
+                formData.append('__RequestVerificationToken', getAntiForgeryToken());
 
                 fetch('/Approval/ApproveClaim', {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    console.log('Approval response:', data);
                     if (data.success) {
                         showSuccessMessage(`Claim #${claimId} approved successfully!`);
-                        // Update the claim card to show approved status
-                        updateClaimCardStatus(claimCard, 'Approved');
-                        // Reload the page after a short delay to show updated data
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
+                        setTimeout(() => location.reload(), 1500);
                     } else {
                         showErrorMessage(data.message || 'Failed to approve claim');
-                        // Revert button state
-                        if (approveBtn) {
-                            approveBtn.innerHTML = '<i class="fas fa-check me-1"></i>Approve';
-                            approveBtn.disabled = false;
-                        }
+                        button.disabled = false;
+                        button.innerHTML = originalText;
                     }
                 })
                 .catch(error => {
-                    console.error('Error approving claim:', error);
-                    showErrorMessage('Error approving claim: ' + error.message);
-                    // Revert button state
-                    if (approveBtn) {
-                        approveBtn.innerHTML = '<i class="fas fa-check me-1"></i>Approve';
-                        approveBtn.disabled = false;
-                    }
+                    console.error('Error:', error);
+                    showErrorMessage('Error approving claim');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
                 });
+                return false;
             }
-        }
-
-        function rejectClaim(claimId, amount) {
-            console.log(`rejectClaim called: claimId=${claimId}, amount=${amount}`);
-
-            const reason = prompt(`Please provide a reason for rejecting Claim #${claimId} for ${amount}:`);
-            if (reason === null) return; // User cancelled
-
-            if (reason.trim() === '') {
-                alert('Please provide a reason for rejection');
-                return;
-            }
-
-            const claimCard = document.querySelector(`[data-claim-id="${claimId}"]`);
-            if (!claimCard) {
-                alert('Claim card not found');
-                return;
-            }
-
-            // Show loading state
-            const rejectBtn = claimCard.querySelector('button[onclick*="rejectClaim"]');
-            if (rejectBtn) {
-                rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rejecting...';
-                rejectBtn.disabled = true;
-            }
-
-            // Make AJAX call with proper form data
-            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-            const formData = new FormData();
-            formData.append('claimId', claimId);
-            formData.append('comments', reason);
-            formData.append('__RequestVerificationToken', token);
-
-            fetch('/Approval/RejectClaim', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            
+            if (e.target.closest('.reject-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                const button = e.target.closest('.reject-btn');
+                const claimId = parseInt(button.getAttribute('data-claim-id'));
+                const amount = button.getAttribute('data-amount');
+                
+                const reason = prompt(`Please provide a reason for rejecting Claim #${claimId} for ${amount}:`);
+                if (reason === null) {
+                    return false;
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Rejection response:', data);
-                if (data.success) {
-                    showSuccessMessage(`Claim #${claimId} rejected successfully!`);
-                    // Update the claim card to show rejected status
-                    updateClaimCardStatus(claimCard, 'Rejected');
-                    // Reload the page after a short delay to show updated data
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showErrorMessage(data.message || 'Failed to reject claim');
-                    // Revert button state
-                    if (rejectBtn) {
-                        rejectBtn.innerHTML = '<i class="fas fa-times me-1"></i>Reject';
-                        rejectBtn.disabled = false;
+                
+                if (reason.trim() === '') {
+                    alert('Please provide a reason for rejection');
+                    return false;
+                }
+
+                const originalText = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Rejecting...';
+
+                const formData = new FormData();
+                formData.append('claimId', claimId.toString());
+                formData.append('comments', reason);
+                formData.append('__RequestVerificationToken', getAntiForgeryToken());
+
+                fetch('/Approval/RejectClaim', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showSuccessMessage(`Claim #${claimId} rejected successfully!`);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showErrorMessage(data.message || 'Failed to reject claim');
+                        button.disabled = false;
+                        button.innerHTML = originalText;
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error rejecting claim:', error);
-                showErrorMessage('Error rejecting claim: ' + error.message);
-                // Revert button state
-                if (rejectBtn) {
-                    rejectBtn.innerHTML = '<i class="fas fa-times me-1"></i>Reject';
-                    rejectBtn.disabled = false;
-                }
-            });
-        }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showErrorMessage('Error rejecting claim');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                });
+                return false;
+            }
+        });
 
         function showSuccessMessage(message) {
-            // Create or update success alert
             let alertDiv = document.querySelector('.alert-success');
             if (!alertDiv) {
                 alertDiv = document.createElement('div');
@@ -418,14 +303,14 @@
                     <span class="alert-message">${message}</span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.container-fluid').firstChild);
+                const container = document.querySelector('.container-fluid') || document.body;
+                container.insertBefore(alertDiv, container.firstChild);
             } else {
                 alertDiv.querySelector('.alert-message').textContent = message;
             }
         }
 
         function showErrorMessage(message) {
-            // Create or update error alert
             let alertDiv = document.querySelector('.alert-danger');
             if (!alertDiv) {
                 alertDiv = document.createElement('div');
@@ -435,54 +320,11 @@
                     <span class="alert-message">${message}</span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('.container-fluid').firstChild);
+                const container = document.querySelector('.container-fluid') || document.body;
+                container.insertBefore(alertDiv, container.firstChild);
             } else {
                 alertDiv.querySelector('.alert-message').textContent = message;
             }
         }
-
-        function updateClaimCardStatus(claimCard, status) {
-            const statusBadge = claimCard.querySelector('.badge');
-            const actionButtons = claimCard.querySelector('.card-footer .d-grid');
-
-            if (statusBadge) {
-                if (status === 'Approved') {
-                    statusBadge.className = 'badge bg-success';
-                    statusBadge.innerHTML = '<i class="fas fa-check me-1"></i>Approved';
-                } else if (status === 'Rejected') {
-                    statusBadge.className = 'badge bg-danger';
-                    statusBadge.innerHTML = '<i class="fas fa-times me-1"></i>Rejected';
-                }
-            }
-
-            if (actionButtons) {
-                if (status === 'Approved') {
-                    actionButtons.innerHTML = '<div class="text-success"><i class="fas fa-check-circle me-1"></i>Claim Approved</div>';
-                } else if (status === 'Rejected') {
-                    actionButtons.innerHTML = '<div class="text-danger"><i class="fas fa-times-circle me-1"></i>Claim Rejected</div>';
-                }
-            }
-        }
-
-        // Test function to verify JavaScript is working
-        function testFunction() {
-            alert('JavaScript is working!');
-        }
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Pending Claims page loaded successfully');
-
-            // Add anti-forgery token to forms if not present
-            if (!document.querySelector('input[name="__RequestVerificationToken"]')) {
-                const token = document.querySelector('meta[name="__RequestVerificationToken"]');
-                if (token) {
-                    const form = document.createElement('form');
-                    form.style.display = 'none';
-                    form.innerHTML = `<input type="hidden" name="__RequestVerificationToken" value="${token.content}">`;
-                    document.body.appendChild(form);
-                }
-            }
-        });
     </script>
 }

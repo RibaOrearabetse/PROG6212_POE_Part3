@@ -134,7 +134,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 SaveClaimsToFile();
                 System.Diagnostics.Debug.WriteLine($"Claim #{claim.ClaimID} saved to file: {DataFilePath}");
 
-                TempData["SuccessMessage"] = $"Claim #{claim.ClaimID} submitted successfully! Total Amount: {claim.TotalAmount:C}";
+                TempData["SuccessMessage"] = $"Claim #{claim.ClaimID} submitted successfully! Total Amount: R {claim.TotalAmount:N2}";
                 TempData["NewClaimId"] = claim.ClaimID; // Pass the new claim ID for file upload
                 return RedirectToAction(nameof(Index));
             }
@@ -259,8 +259,11 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 claim.LastUpdated = DateTime.Now;
                 claim.StatusNotes = comments ?? "Approved by coordinator/manager";
 
-                // Save to file
+                // Save claim to file
                 SaveClaimsToFile();
+
+                // Create approval record using ApprovalController
+                ApprovalController.CreateApprovalRecord(id, comments ?? "Approved by coordinator/manager", 1);
 
                 TempData["SuccessMessage"] = $"Claim #{id} has been approved successfully!";
                 return RedirectToAction(nameof(Details), new { id = id });

@@ -14,32 +14,105 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         private static readonly string ClaimsFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "claims.json");
         public IActionResult Index()
         {
-            // Load data from file if not already loaded
+            // Always load from file first to get the latest persisted data
             if (!_approvals.Any())
             {
                 LoadApprovalsFromFile();
+            }
 
-                // If still no approvals after loading, initialize with sample data
-                if (!_approvals.Any())
+            // Filter out corrupted/empty approvals
+            var validApprovals = _approvals.Where(a => 
+                a.ApprovalID > 0 && 
+                a.ClaimID > 0 &&
+                a.ApprovalDate != default(DateTime) &&
+                a.ApprovalDate.Year > 2000
+            ).ToList();
+
+            // If we have corrupted data, clean it up
+            if (_approvals.Count != validApprovals.Count)
+            {
+                System.Diagnostics.Debug.WriteLine($"Filtered out {_approvals.Count - validApprovals.Count} corrupted approval entries");
+                _approvals = validApprovals;
+                if (_approvals.Any())
                 {
-                    _approvals.AddRange(GetSampleApprovals());
                     _nextApprovalId = _approvals.Max(a => a.ApprovalID) + 1;
                     SaveApprovalsToFile();
                 }
             }
 
+            // Only initialize with sample data if file doesn't exist (first time)
+            if (!_approvals.Any())
+            {
+                bool fileExists = System.IO.File.Exists(ApprovalsFilePath);
+                if (!fileExists)
+                {
+                    _approvals.AddRange(GetSampleApprovals());
+                    _nextApprovalId = _approvals.Max(a => a.ApprovalID) + 1;
+                    System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Initialized with {_approvals.Count} sample approvals (first time)");
+                    SaveApprovalsToFile();
+                }
+            }
+
             var approvals = _approvals.OrderByDescending(a => a.ApprovalDate).ToList();
+            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Returning {approvals.Count} valid approvals to view");
             return View(approvals);
+        }
+
+        // Static method to create an approval record (can be called from other controllers)
+        public static void CreateApprovalRecord(int claimId, string comments, int approverId = 1)
+        {
+            try
+            {
+                // Load approvals if not already loaded
+                if (!_approvals.Any())
+                {
+                    LoadApprovalsFromFile();
+                }
+
+                // Check if approval already exists for this claim
+                var existingApproval = _approvals.FirstOrDefault(a => a.ClaimID == claimId);
+                if (existingApproval != null)
+                {
+                    // Update existing approval
+                    existingApproval.ApprovalDate = DateTime.Now;
+                    existingApproval.Comments = comments;
+                    existingApproval.ApproverID = approverId;
+                    System.Diagnostics.Debug.WriteLine($"Updated existing approval for claim {claimId}");
+                }
+                else
+                {
+                    // Create new approval record
+                    var approval = new Approval
+                    {
+                        ApprovalID = _nextApprovalId++,
+                        ClaimID = claimId,
+                        ApprovalDate = DateTime.Now,
+                        Comments = comments,
+                        ApproverID = approverId
+                    };
+                    _approvals.Add(approval);
+                    System.Diagnostics.Debug.WriteLine($"Created new approval record for claim {claimId}");
+                }
+
+                // Save to file immediately
+                SaveApprovalsToFile();
+                System.Diagnostics.Debug.WriteLine($"Approval record saved to file: {ApprovalsFilePath}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error creating approval record: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
         }
 
         public IActionResult PendingClaims()
         {
             try
             {
-                // Get all pending claims for coordinators and managers
-                var pendingClaims = GetPendingClaims();
-                System.Diagnostics.Debug.WriteLine($"Found {pendingClaims.Count} pending claims");
-                return View("PendingClaims", pendingClaims);
+                // Get all claims regardless of status for review
+                var allClaims = GetPendingClaims();
+                System.Diagnostics.Debug.WriteLine($"PendingClaims action: Returning {allClaims.Count} total claims (all statuses)");
+                return View("PendingClaims", allClaims);
             }
             catch (Exception ex)
             {
@@ -49,18 +122,10 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         }
         public IActionResult Details(int id)
         {
-            // Load approvals from file if not already loaded
+            // Always load from file first to get the latest persisted data
             if (!_approvals.Any())
             {
                 LoadApprovalsFromFile();
-
-                // If still no approvals after loading, initialize with sample data
-                if (!_approvals.Any())
-                {
-                    _approvals.AddRange(GetSampleApprovals());
-                    _nextApprovalId = _approvals.Max(a => a.ApprovalID) + 1;
-                    SaveApprovalsToFile();
-                }
             }
 
             var approval = _approvals.FirstOrDefault(a => a.ApprovalID == id);
@@ -84,18 +149,10 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         // GET: Approval/Edit/5
         public IActionResult Edit(int id)
         {
-            // Load approvals from file if not already loaded
+            // Always load from file first to get the latest persisted data
             if (!_approvals.Any())
             {
                 LoadApprovalsFromFile();
-
-                // If still no approvals after loading, initialize with sample data
-                if (!_approvals.Any())
-                {
-                    _approvals.AddRange(GetSampleApprovals());
-                    _nextApprovalId = _approvals.Max(a => a.ApprovalID) + 1;
-                    SaveApprovalsToFile();
-                }
             }
 
             var approval = _approvals.FirstOrDefault(a => a.ApprovalID == id);
@@ -173,11 +230,18 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             {
                 System.Diagnostics.Debug.WriteLine($"ApproveClaim called with claimId: {claimId}, comments: {comments}");
 
-                // Load current data
-                LoadClaimsFromFile();
+                // Always get fresh data from ClaimController to ensure we have the latest claims
+                var allClaims = ClaimController.GetAllClaims();
+                if (allClaims == null || !allClaims.Any())
+                {
+                    LoadClaimsFromFile();
+                    allClaims = ClaimController.GetAllClaims();
+                }
                 LoadApprovalsFromFile();
 
-                var claim = GetClaimById(claimId);
+                // Get the claim from ClaimController's list to ensure we're updating the right instance
+                var claim = allClaims?.FirstOrDefault(c => c.ClaimID == claimId);
+                
                 if (claim != null)
                 {
                     // Update claim status in the shared claim storage
@@ -185,23 +249,13 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     claim.LastUpdated = DateTime.Now;
                     claim.StatusNotes = comments ?? "Approved by coordinator/manager";
 
-                    // Create approval record
-                    var approval = new Approval
-                    {
-                        ApprovalID = _nextApprovalId++,
-                        ClaimID = claimId,
-                        ApprovalDate = DateTime.Now,
-                        Comments = comments ?? "Approved by coordinator/manager",
-                        ApproverID = 1 // For demo purposes - in real app, get from session/auth
-                    };
+                    // Save claim using ClaimController to persist the changes
+                    ClaimController.SaveClaimsToFile();
 
-                    _approvals.Add(approval);
+                    // Create approval record using the static method
+                    CreateApprovalRecord(claimId, comments ?? "Approved by coordinator/manager", 1);
 
-                    // Save to files
-                    SaveClaimsToFile();
-                    SaveApprovalsToFile();
-
-                    System.Diagnostics.Debug.WriteLine($"Claim {claimId} approved successfully");
+                    System.Diagnostics.Debug.WriteLine($"Claim {claimId} approved successfully and approval record created");
                     return Json(new { success = true, message = $"Claim #{claimId} has been approved successfully!" });
                 }
                 else
@@ -213,6 +267,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error in ApproveClaim: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 return Json(new { success = false, message = "An error occurred while approving the claim." });
             }
         }
@@ -225,11 +280,18 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             {
                 System.Diagnostics.Debug.WriteLine($"RejectClaim called with claimId: {claimId}, comments: {comments}");
 
-                // Load current data
-                LoadClaimsFromFile();
+                // Always get fresh data from ClaimController to ensure we have the latest claims
+                var allClaims = ClaimController.GetAllClaims();
+                if (allClaims == null || !allClaims.Any())
+                {
+                    LoadClaimsFromFile();
+                    allClaims = ClaimController.GetAllClaims();
+                }
                 LoadApprovalsFromFile();
 
-                var claim = GetClaimById(claimId);
+                // Get the claim from ClaimController's list to ensure we're updating the right instance
+                var claim = allClaims?.FirstOrDefault(c => c.ClaimID == claimId);
+                
                 if (claim != null)
                 {
                     // Update claim status in the shared claim storage
@@ -237,23 +299,13 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     claim.LastUpdated = DateTime.Now;
                     claim.StatusNotes = comments ?? "Rejected by coordinator/manager";
 
-                    // Create approval record
-                    var approval = new Approval
-                    {
-                        ApprovalID = _nextApprovalId++,
-                        ClaimID = claimId,
-                        ApprovalDate = DateTime.Now,
-                        Comments = comments ?? "Rejected by coordinator/manager",
-                        ApproverID = 1 // For demo purposes - in real app, get from session/auth
-                    };
+                    // Save claim using ClaimController to persist the changes
+                    ClaimController.SaveClaimsToFile();
 
-                    _approvals.Add(approval);
+                    // Create approval record using the static method
+                    CreateApprovalRecord(claimId, comments ?? "Rejected by coordinator/manager", 1);
 
-                    // Save to files
-                    SaveClaimsToFile();
-                    SaveApprovalsToFile();
-
-                    System.Diagnostics.Debug.WriteLine($"Claim {claimId} rejected successfully");
+                    System.Diagnostics.Debug.WriteLine($"Claim {claimId} rejected successfully and approval record created");
                     return Json(new { success = true, message = $"Claim #{claimId} has been rejected." });
                 }
                 else
@@ -265,62 +317,69 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error in RejectClaim: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 return Json(new { success = false, message = "An error occurred while rejecting the claim." });
             }
         }
         private List<Claim> GetPendingClaims()
         {
-            // Get all claims with "Pending", "Approved", or "Rejected" status from the shared claim storage
-            // This shows pending claims plus recently processed ones
+            // Get all actual claims from the shared claim storage (regardless of status)
             var allClaims = GetSharedClaims();
-            System.Diagnostics.Debug.WriteLine($"GetPendingClaims: Found {allClaims.Count} total claims");
-
-            var relevantClaims = allClaims.Where(c =>
-                c.ClaimStatus == "Pending" ||
-                c.ClaimStatus == "Approved" ||
-                c.ClaimStatus == "Rejected"
+            
+            // Filter out only corrupted/empty claims (NOT by status - we want all statuses)
+            var validClaims = allClaims.Where(c =>
+                c.ClaimID > 0 &&
+                c.ClaimDate.Year > 2000 &&
+                c.HoursWorked > 0 &&
+                c.HourlyRate > 0
             ).OrderByDescending(c => c.SubmissionDate).ToList();
 
-            System.Diagnostics.Debug.WriteLine($"GetPendingClaims: Found {relevantClaims.Count} relevant claims");
-            foreach (var claim in relevantClaims)
-            {
-                System.Diagnostics.Debug.WriteLine($"Claim {claim.ClaimID}: Status={claim.ClaimStatus}, Amount={claim.TotalAmount}");
-            }
-
-            return relevantClaims;
+            System.Diagnostics.Debug.WriteLine($"GetPendingClaims: Found {validClaims.Count} valid claims (all statuses) out of {allClaims.Count} total claims");
+            return validClaims;
         }
 
         private Claim GetClaimById(int claimId)
         {
-            var allClaims = GetSharedClaims();
-            return allClaims.FirstOrDefault(c => c.ClaimID == claimId);
+            // Always get fresh data from ClaimController to ensure we have the latest claims
+            var allClaims = ClaimController.GetAllClaims();
+            if (allClaims == null || !allClaims.Any())
+            {
+                // Fallback to local method if ClaimController returns empty
+                allClaims = GetSharedClaims();
+            }
+            return allClaims?.FirstOrDefault(c => c.ClaimID == claimId);
         }
 
         private List<Claim> GetSharedClaims()
         {
-            // If no claims loaded yet, try to load from file or initialize with sample data
-            if (!_claims.Any())
+            // Always load fresh data from ClaimController to ensure we get all created claims
+            // This ensures synchronization between ClaimController and ApprovalController
+            var allClaims = ClaimController.GetAllClaims();
+            
+            if (allClaims != null && allClaims.Any())
             {
-                System.Diagnostics.Debug.WriteLine("No claims in memory, loading from file...");
-                LoadClaimsFromFile();
-
-                // If still no claims after loading, initialize with sample data
-                if (!_claims.Any())
-                {
-                    System.Diagnostics.Debug.WriteLine("No claims found in file, initializing with sample data...");
-                    _claims.AddRange(GetSampleClaims());
-                    SaveClaimsToFile();
-                    System.Diagnostics.Debug.WriteLine($"Initialized with {_claims.Count} sample claims");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"Loaded {_claims.Count} claims from file");
-                }
+                System.Diagnostics.Debug.WriteLine($"GetSharedClaims: Loaded {allClaims.Count} claims from ClaimController");
+                return allClaims;
             }
-            else
+            
+            // Fallback: if ClaimController returns empty, try loading directly from file
+            LoadClaimsFromFile();
+            if (_claims.Any())
             {
-                System.Diagnostics.Debug.WriteLine($"Using {_claims.Count} claims from memory");
+                System.Diagnostics.Debug.WriteLine($"GetSharedClaims: Loaded {_claims.Count} claims from file directly");
+                return _claims;
             }
+            
+            // Only initialize with sample data if file doesn't exist (first time)
+            bool fileExists = System.IO.File.Exists(ClaimsFilePath);
+            if (!fileExists)
+            {
+                System.Diagnostics.Debug.WriteLine("GetSharedClaims: No claims file exists, initializing with sample data...");
+                _claims.AddRange(GetSampleClaims());
+                SaveClaimsToFile();
+                System.Diagnostics.Debug.WriteLine($"GetSharedClaims: Initialized with {_claims.Count} sample claims");
+            }
+            
             return _claims;
         }
 
@@ -349,7 +408,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             return _approvals;
         }
 
-        private List<Approval> GetSampleApprovals()
+        private static List<Approval> GetSampleApprovals()
         {
             return new List<Approval>
             {
@@ -359,7 +418,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             };
         }
 
-        private void LoadApprovalsFromFile()
+        private static void LoadApprovalsFromFile()
         {
             try
             {
@@ -368,23 +427,40 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     var json = System.IO.File.ReadAllText(ApprovalsFilePath);
                     if (!string.IsNullOrEmpty(json))
                     {
-                        _approvals = JsonSerializer.Deserialize<List<Approval>>(json) ?? new List<Approval>();
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        };
+                        _approvals = JsonSerializer.Deserialize<List<Approval>>(json, options) ?? new List<Approval>();
                         if (_approvals.Any())
                         {
                             _nextApprovalId = _approvals.Max(a => a.ApprovalID) + 1;
+                            System.Diagnostics.Debug.WriteLine($"Loaded {_approvals.Count} approvals from file: {ApprovalsFilePath}. Next Approval ID will be: {_nextApprovalId}");
                         }
-                        System.Diagnostics.Debug.WriteLine($"Loaded {_approvals.Count} approvals from file");
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"File exists but contains no valid approvals: {ApprovalsFilePath}");
+                        }
                     }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"File exists but is empty: {ApprovalsFilePath}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Approvals file does not exist: {ApprovalsFilePath}");
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading approvals from file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 _approvals = new List<Approval>();
             }
         }
 
-        private void SaveApprovalsToFile()
+        private static void SaveApprovalsToFile()
         {
             try
             {
@@ -392,15 +468,24 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
+                    System.Diagnostics.Debug.WriteLine($"Created Data directory: {directory}");
                 }
 
-                var json = JsonSerializer.Serialize(_approvals, new JsonSerializerOptions { WriteIndented = true });
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+
+                var json = JsonSerializer.Serialize(_approvals, options);
                 System.IO.File.WriteAllText(ApprovalsFilePath, json);
-                System.Diagnostics.Debug.WriteLine($"Saved {_approvals.Count} approvals to file");
+                System.Diagnostics.Debug.WriteLine($"Successfully saved {_approvals.Count} approvals to file: {ApprovalsFilePath}");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error saving approvals to file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw; // Re-throw to ensure caller knows save failed
             }
         }
 
@@ -413,18 +498,23 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     var json = System.IO.File.ReadAllText(ClaimsFilePath);
                     if (!string.IsNullOrEmpty(json))
                     {
-                        _claims = JsonSerializer.Deserialize<List<Claim>>(json) ?? new List<Claim>();
-                        System.Diagnostics.Debug.WriteLine($"Loaded {_claims.Count} claims from file");
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        };
+                        _claims = JsonSerializer.Deserialize<List<Claim>>(json, options) ?? new List<Claim>();
+                        System.Diagnostics.Debug.WriteLine($"ApprovalController.LoadClaimsFromFile: Loaded {_claims.Count} claims from file");
                     }
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("No claims file found, will initialize with sample data if needed");
+                    System.Diagnostics.Debug.WriteLine("ApprovalController.LoadClaimsFromFile: No claims file found");
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading claims from file: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 _claims = new List<Claim>();
             }
         }
