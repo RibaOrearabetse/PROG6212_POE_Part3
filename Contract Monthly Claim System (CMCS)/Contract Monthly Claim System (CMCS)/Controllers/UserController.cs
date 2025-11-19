@@ -136,6 +136,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 string lastName = Request.Form["LastName"];
                 string email = Request.Form["Email"];
                 string contactNumber = Request.Form["ContactNumber"];
+                string hourlyRateStr = Request.Form["HourlyRate"];
                 string roleIdStr = Request.Form["RoleID"];
 
                 // Simple validation
@@ -150,6 +151,14 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 if (!int.TryParse(roleIdStr, out int roleId))
                 {
                     TempData["ErrorMessage"] = "Invalid role selected.";
+                    return View();
+                }
+
+                // Parse HourlyRate (optional)
+                decimal hourlyRate = 0;
+                if (!string.IsNullOrEmpty(hourlyRateStr) && !decimal.TryParse(hourlyRateStr, out hourlyRate))
+                {
+                    TempData["ErrorMessage"] = "Invalid hourly rate format.";
                     return View();
                 }
 
@@ -168,6 +177,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     LastName = lastName,
                     Email = email,
                     ContactNumber = contactNumber ?? "",
+                    HourlyRate = hourlyRate,
                     RoleID = roleId,
                     PasswordHash = "default_password_hash"
                 };
@@ -200,6 +210,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 string lastName = Request.Form["LastName"];
                 string email = Request.Form["Email"];
                 string contactNumber = Request.Form["ContactNumber"];
+                string hourlyRateStr = Request.Form["HourlyRate"];
                 string roleIdStr = Request.Form["RoleID"];
 
                 // Simple validation
@@ -214,6 +225,14 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 if (!int.TryParse(roleIdStr, out int roleId))
                 {
                     TempData["ErrorMessage"] = "Invalid role selected.";
+                    return RedirectToAction(nameof(Edit), new { id = id });
+                }
+
+                // Parse HourlyRate (optional)
+                decimal hourlyRate = 0;
+                if (!string.IsNullOrEmpty(hourlyRateStr) && !decimal.TryParse(hourlyRateStr, out hourlyRate))
+                {
+                    TempData["ErrorMessage"] = "Invalid hourly rate format.";
                     return RedirectToAction(nameof(Edit), new { id = id });
                 }
 
@@ -237,6 +256,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 existingUser.LastName = lastName;
                 existingUser.Email = email;
                 existingUser.ContactNumber = contactNumber ?? "";
+                existingUser.HourlyRate = hourlyRate;
                 existingUser.RoleID = roleId;
                 // Keep existing password hash
 

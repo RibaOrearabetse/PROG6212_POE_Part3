@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Reports & Invoices";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-chart-bar me-2 text-info"></i>
+                        Reports & Invoices
+                    </h2>
+                    <p class="text-muted mb-0">Generate and export claim reports</p>
+                </div>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Generate Report
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="GenerateReport" method="get" id="reportForm">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">User</label>
+                                <select name="userId" class="form-select" id="userId">
+                                    <option value="">All Users</option>
+                                    @if (ViewBag.Users != null)
+                                    {
+                                        foreach (var user in ViewBag.Users)
+                                        {
+                                            <option value="@user.UserID">@user.FirstName @user.LastName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select" id="status">
+                                    <option value="">All Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Processing">Processing</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" name="startDate" class="form-control" id="startDate" />
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" name="endDate" class="form-control" id="endDate" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-search me-1"></i>
+                                Generate Report (Show All)
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="exportReport()">
+                                <i class="fas fa-download me-1"></i>
+                                Export JSON
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function exportReport() {
+        const form = document.getElementById('reportForm');
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        
+        for (const [key, value] of formData.entries()) {
+            if (value) {
+                params.append(key, value);
+            }
+        }
+        
+        window.location.href = '/HR/ExportReport?' + params.toString();
+    }
+</script>
+

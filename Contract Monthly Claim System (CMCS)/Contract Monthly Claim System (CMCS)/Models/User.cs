@@ -31,6 +31,10 @@ namespace Contract_Monthly_Claim_System__CMCS_.Models
         [Display(Name = "Contact Number")]
         public string ContactNumber { get; set; } = string.Empty;
 
+        [Range(0.01, double.MaxValue, ErrorMessage = "Hourly rate must be greater than 0")]
+        [Display(Name = "Hourly Rate (ZAR)")]
+        public decimal HourlyRate { get; set; }
+
         [ForeignKey("Role")]
         [Required(ErrorMessage = "Role is required")]
         [Display(Name = "Role")]

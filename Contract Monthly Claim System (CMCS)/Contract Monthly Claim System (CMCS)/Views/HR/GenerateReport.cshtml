@@ -1,0 +1,141 @@
+@using Contract_Monthly_Claim_System__CMCS_.Models
+@{
+    ViewData["Title"] = "Generated Report";
+    var reportData = ViewBag.ReportData as List<ClaimReportItem> ?? new List<ClaimReportItem>();
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-alt me-2 text-info"></i>
+                        Generated Report
+                    </h2>
+                    <p class="text-muted mb-0">Claim report results</p>
+                </div>
+                <div>
+                    <a asp-action="Reports" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Reports
+                    </a>
+                    <button type="button" class="btn btn-success" onclick="exportReport()">
+                        <i class="fas fa-download me-1"></i>
+                        Export JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (reportData.Any())
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Report Results (@reportData.Count records)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Claim ID</th>
+                                <th>User Name</th>
+                                <th>Claim Date</th>
+                                <th>Status</th>
+                                <th>Hours Worked</th>
+                                <th>Hourly Rate</th>
+                                <th>Total Amount</th>
+                                <th>Submission Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in reportData)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-controller="Claim" asp-action="Details" asp-route-id="@item.ClaimID" class="text-decoration-none">
+                                            <span class="badge bg-secondary" style="cursor: pointer;" onmouseover="this.style.backgroundColor='#5a6268'" onmouseout="this.style.backgroundColor='#6c757d'">@item.ClaimID</span>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Claim" asp-action="Details" asp-route-id="@item.ClaimID" class="text-decoration-none fw-bold text-primary" style="cursor: pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                            <i class="fas fa-link me-1"></i>@item.UserName
+                                        </a>
+                                    </td>
+                                    <td>@item.ClaimDate.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        @{
+                                            var statusClass = item.Status switch
+                                            {
+                                                "Approved" => "bg-success",
+                                                "Rejected" => "bg-danger",
+                                                "Pending" => "bg-warning",
+                                                "Processing" => "bg-info",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @statusClass">@item.Status</span>
+                                    </td>
+                                    <td>@item.HoursWorked</td>
+                                    <td>R @item.HourlyRate.ToString("N2")</td>
+                                    <td class="fw-bold text-success">R @item.TotalAmount.ToString("N2")</td>
+                                    <td>@item.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="6" class="text-end fw-bold">Total Amount:</td>
+                                <td class="fw-bold text-success">
+                                    R @reportData.Sum(r => r.TotalAmount).ToString("N2")
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No claims found matching the selected criteria.
+        </div>
+    }
+</div>
+
+<script>
+    function exportReport() {
+        const params = new URLSearchParams();
+        
+        @if (ViewBag.SelectedUserId != null)
+        {
+            <text>params.append('userId', '@ViewBag.SelectedUserId');</text>
+        }
+        
+        @if (ViewBag.SelectedStatus != null)
+        {
+            <text>params.append('status', '@ViewBag.SelectedStatus');</text>
+        }
+        
+        @if (ViewBag.StartDate != null)
+        {
+            <text>params.append('startDate', '@ViewBag.StartDate?.ToString("yyyy-MM-dd")');</text>
+        }
+        
+        @if (ViewBag.EndDate != null)
+        {
+            <text>params.append('endDate', '@ViewBag.EndDate?.ToString("yyyy-MM-dd")');</text>
+        }
+        
+        window.location.href = '/HR/ExportReport?' + params.toString();
+    }
+</script>
+
