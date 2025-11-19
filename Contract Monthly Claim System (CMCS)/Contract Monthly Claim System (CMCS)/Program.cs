@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.EntityFrameworkCore;
+using Contract_Monthly_Claim_System__CMCS_.Data;
 
 namespace Contract_Monthly_Claim_System__CMCS_
 {
@@ -10,6 +12,10 @@ namespace Contract_Monthly_Claim_System__CMCS_
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            // Add DbContext with SQL Server
+            builder.Services.AddDbContext<CmcsDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
             .AddNegotiate();
@@ -35,6 +41,13 @@ namespace Contract_Monthly_Claim_System__CMCS_
             app.UseRouting();
 
             app.UseAuthorization();
+
+            // Ensure database is created (optional - removes if using migrations)
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CmcsDbContext>();
+                dbContext.Database.EnsureCreated();
+            }
 
             app.MapStaticAssets();
             app.MapControllerRoute(
