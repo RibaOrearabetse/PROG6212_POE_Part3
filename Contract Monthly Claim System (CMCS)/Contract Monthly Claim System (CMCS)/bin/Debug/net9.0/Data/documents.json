@@ -1,65 +1,5 @@
 [
   {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
     "documentID": 1,
     "fileName": "Programming 2B PROG6212 POE Part 1 ST10446648 Orearabetse Riba.docx",
     "filePath": "/uploads/documents/271e542d-fe4c-4133-990a-9b6ea75b6d37.docx",
@@ -67,6 +7,16 @@
     "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "uploadDate": "2025-10-24T10:25:51.604148+02:00",
     "claimID": 0,
+    "claim": null
+  },
+  {
+    "documentID": 2,
+    "fileName": "INSY6112 ST10446648 ICE task 1.docx",
+    "filePath": "/uploads/documents/1f0a99a4-abc8-4604-8b26-b9285766c7df.docx",
+    "fileSize": 557553,
+    "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "uploadDate": "2025-11-19T10:32:25.7784322+02:00",
+    "claimID": 2,
     "claim": null
   }
 ]

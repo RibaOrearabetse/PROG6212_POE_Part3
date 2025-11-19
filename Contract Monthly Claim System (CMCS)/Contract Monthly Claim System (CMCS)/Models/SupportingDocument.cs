@@ -15,6 +15,6 @@ namespace Contract_Monthly_Claim_System__CMCS_.Models
 
         [ForeignKey("Claim")]
         public int ClaimID { get; set; }
-        public virtual Claim Claim { get; set; } = null!;
+        public virtual Claim? Claim { get; set; }
     }
 }

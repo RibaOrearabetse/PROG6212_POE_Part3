@@ -131,5 +131,43 @@
     "statusDisplayName": "Rejected",
     "statusBadgeClass": "bg-danger",
     "statusProgress": 100
+  },
+  {
+    "claimID": 8,
+    "claimDate": "2025-11-17T00:00:00",
+    "claimStatus": "Rejected",
+    "hoursWorked": 60,
+    "hourlyRate": 450,
+    "totalAmount": 27000,
+    "submissionDate": "2025-11-17T22:08:28.1121445+02:00",
+    "lastUpdated": "2025-11-17T22:08:54.892198+02:00",
+    "statusNotes": "Not approved",
+    "notes": null,
+    "userID": 1,
+    "user": null,
+    "supportingDocuments": [],
+    "approvals": [],
+    "statusDisplayName": "Rejected",
+    "statusBadgeClass": "bg-danger",
+    "statusProgress": 100
+  },
+  {
+    "claimID": 9,
+    "claimDate": "2025-01-18T00:00:00",
+    "claimStatus": "Approved",
+    "hoursWorked": 50,
+    "hourlyRate": 450,
+    "totalAmount": 22500,
+    "submissionDate": "2025-11-19T10:33:31.7154274+02:00",
+    "lastUpdated": "2025-11-19T10:33:54.054465+02:00",
+    "statusNotes": null,
+    "notes": null,
+    "userID": 1,
+    "user": null,
+    "supportingDocuments": [],
+    "approvals": [],
+    "statusDisplayName": "Approved",
+    "statusBadgeClass": "bg-success",
+    "statusProgress": 100
   }
 ]

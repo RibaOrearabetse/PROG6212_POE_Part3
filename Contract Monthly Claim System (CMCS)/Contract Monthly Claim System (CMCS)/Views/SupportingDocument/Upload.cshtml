@@ -1,5 +1,21 @@
-﻿@{
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
     ViewData["Title"] = "Upload Supporting Documents";
+    var claimSelectList = ViewBag.ClaimSelectList as List<SelectListItem> ?? new List<SelectListItem>();
+    var selectedClaimId = 0;
+    if (ViewBag.SelectedClaimID is int sc)
+    {
+        selectedClaimId = sc;
+    }
+    else
+    {
+        var preSelected = claimSelectList.FirstOrDefault(i => i.Selected);
+        if (preSelected != null && int.TryParse(preSelected.Value, out var parsedId))
+        {
+            selectedClaimId = parsedId;
+        }
+    }
 }
 
 <div class="container-fluid">
@@ -11,7 +27,12 @@
                         <i class="fas fa-upload me-2 text-primary"></i>
                         Upload Supporting Documents
                     </h2>
-                    <p class="text-muted mb-0">Upload documents for Claim #@ViewBag.ClaimID</p>
+                    <p class="text-muted mb-0">
+                        Upload documents for
+                        <span id="selected-claim-label">
+                            @(selectedClaimId > 0 ? $"Claim #{selectedClaimId}" : "an unassigned document")
+                        </span>
+                    </p>
                 </div>
                 <a asp-controller="Claim" asp-action="Index" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-1"></i>
@@ -49,8 +70,28 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form asp-action="UploadFile" asp-route-claimId="@ViewBag.ClaimID" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <form asp-action="UploadFile" method="post" enctype="multipart/form-data" id="uploadForm">
                         @Html.AntiForgeryToken()
+
+                        <div class="mb-4">
+                            <label for="claimId" class="form-label fw-bold">
+                                <i class="fas fa-hashtag me-1 text-primary"></i>
+                                Select Claim to Link
+                            </label>
+                            <select class="form-select form-select-lg" id="claimId" name="claimId" required>
+                                @{
+                                    foreach (var item in claimSelectList)
+                                    {
+                                        var selectedAttr = item.Selected ? " selected=\"selected\"" : string.Empty;
+@:<option value="@item.Value"@selectedAttr>@item.Text</option>
+                                    }
+                                }
+                            </select>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Pick the claim this document belongs to. Choose "Unassigned" to upload now and link later.
+                            </div>
+                        </div>
 
                         <div class="mb-4">
                             <label for="file" class="form-label fw-bold">
@@ -133,7 +174,14 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            loadDocuments();
+            const claimSelectEl = document.getElementById('claimId');
+            if (claimSelectEl) {
+                loadDocuments();
+                claimSelectEl.addEventListener('change', loadDocuments);
+            } else {
+                document.getElementById('documentsList').innerHTML =
+                    '<div class="text-center py-3 text-muted">Create a claim to start uploading documents.</div>';
+            }
 
             // File input change handler
             document.getElementById('file').addEventListener('change', function(e) {
@@ -176,13 +224,27 @@
         });
 
         function loadDocuments() {
-            const claimId = @ViewBag.ClaimID;
+            const claimSelect = document.getElementById('claimId');
+            const claimId = claimSelect ? claimSelect.value : '@selectedClaimId';
 
-            fetch(`/SupportingDocument/GetDocumentsForClaim?claimId=${claimId}`)
+            const label = document.getElementById('selected-claim-label');
+            if (label) {
+                label.textContent = claimId && claimId !== '0'
+                    ? `Claim #${claimId}`
+                    : 'an unassigned document';
+            }
+
+            if (!claimId) {
+                document.getElementById('documentsList').innerHTML =
+                    '<div class="text-center py-3 text-muted">Select a claim to see its documents.</div>';
+                return;
+            }
+
+            const claimIdParam = encodeURIComponent(claimId);
+
+            fetch(`/SupportingDocument/GetDocumentsForClaim?claimId=${claimIdParam}`)
                 .then(response => response.json())
-                .then(documents => {
-                    displayDocuments(documents);
-                })
+                .then(documents => displayDocuments(documents))
                 .catch(error => {
                     console.error('Error loading documents:', error);
                     document.getElementById('documentsList').innerHTML =
@@ -221,9 +283,12 @@
                                     <div><i class="fas fa-weight me-1"></i>${fileSize}</div>
                                     <div><i class="fas fa-calendar me-1"></i>${uploadDate}</div>
                                 </div>
-                                <div class="mt-2">
+                                <div class="mt-3 d-flex gap-2">
                                     <a href="${doc.filePath}" target="_blank" class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <a href="/SupportingDocument/Download/${doc.documentId}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-download me-1"></i>Download
                                     </a>
                                 </div>
                             </div>
@@ -235,5 +300,6 @@
 
             container.innerHTML = html;
         }
+
     </script>
 }

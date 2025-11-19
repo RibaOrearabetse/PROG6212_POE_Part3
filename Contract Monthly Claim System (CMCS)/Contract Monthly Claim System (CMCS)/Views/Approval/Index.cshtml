@@ -1,4 +1,6 @@
 ﻿@model IEnumerable<Contract_Monthly_Claim_System__CMCS_.Models.Approval>
+@using System.Linq
+@using System.Collections.Generic
 @{
     ViewData["Title"] = "Approvals";
 }
@@ -56,10 +58,27 @@
         <tbody>
             @if (Model != null && Model.Any())
             {
-                @foreach (var item in Model)
+                // Get all claims to verify status - always get fresh data
+                var allClaims = Contract_Monthly_Claim_System__CMCS_.Controllers.ClaimController.GetAllClaims();
+                var approvedClaimIds = allClaims?
+                .Where(c => c != null &&
+                !string.IsNullOrEmpty(c.ClaimStatus) &&
+                c.ClaimStatus.Trim().Equals("Approved", System.StringComparison.OrdinalIgnoreCase))
+                .Select(c => c.ClaimID)
+                .ToHashSet() ?? new System.Collections.Generic.HashSet<int>();
+
+                // Filter model to only include approvals for approved claims
+                var filteredApprovals = Model
+                .Where(a => a != null &&
+                a.ApprovalID > 0 &&
+                a.ClaimID > 0 &&
+                a.ApprovalDate.Year > 2000 &&
+                approvedClaimIds.Contains(a.ClaimID))
+                .ToList();
+
+                if (filteredApprovals.Any())
                 {
-                    // Only display valid approvals (filter out corrupted ones)
-                    @if (item.ApprovalID > 0 && item.ClaimID > 0 && item.ApprovalDate.Year > 2000)
+                    foreach (var item in filteredApprovals)
                     {
                         <tr>
                             <td>@item.ApprovalID</td>
@@ -82,10 +101,10 @@
                         </tr>
                     }
                 }
-                @if (!Model.Any(a => a.ApprovalID > 0 && a.ClaimID > 0 && a.ApprovalDate.Year > 2000))
+                else
                 {
                     <tr>
-                        <td colspan="6" class="text-center">No valid approvals found.</td>
+                        <td colspan="6" class="text-center">No approvals found for approved claims.</td>
                     </tr>
                 }
             }

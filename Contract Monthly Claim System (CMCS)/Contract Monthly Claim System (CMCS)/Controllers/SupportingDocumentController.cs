@@ -1,13 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Contract_Monthly_Claim_System__CMCS_.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Text.Json;
 
 namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 {
     public class SupportingDocumentController : Controller
     {
-        private static List<SupportingDocument> _documents = new List<SupportingDocument>();
-        private static int _nextDocumentId = 1;
         private readonly IWebHostEnvironment _environment;
         private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
         private static readonly string[] AllowedExtensions = { ".pdf", ".docx", ".xlsx", ".doc", ".xls" };
@@ -20,42 +19,58 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 
         public IActionResult Index()
         {
-            // Load data from file if not already loaded
-            if (!_documents.Any())
-            {
-                LoadDocumentsFromFile();
+            var documents = LoadDocuments()
+                .OrderByDescending(d => d.UploadDate)
+                .ToList();
 
-                // If still no documents after loading, initialize with sample data
-                if (!_documents.Any())
-                {
-                    _documents.AddRange(GetSampleDocuments());
-                    _nextDocumentId = _documents.Max(d => d.DocumentID) + 1;
-                    SaveDocumentsToFile();
-                }
+            if (!documents.Any())
+            {
+                TempData["InfoMessage"] = "No supporting documents have been uploaded yet. Upload your first document to get started.";
             }
 
-            var documents = _documents.OrderByDescending(d => d.UploadDate).ToList();
             return View(documents);
         }
         public IActionResult Details(int id)
         {
-            // Initialize with sample documents if no documents exist
-            if (!_documents.Any())
-            {
-                _documents.AddRange(GetSampleDocuments());
-                _nextDocumentId = _documents.Max(d => d.DocumentID) + 1;
-            }
+            var documents = LoadDocuments();
 
-            var document = _documents.FirstOrDefault(d => d.DocumentID == id);
+            var document = documents.FirstOrDefault(d => d.DocumentID == id);
             if (document == null)
             {
+                TempData["ErrorMessage"] = "Document not found.";
                 return RedirectToAction(nameof(Index));
             }
             return View(document);
         }
-        public IActionResult Upload(int claimId)
+
+        public IActionResult Upload(int claimId = 0)
         {
-            ViewBag.ClaimID = claimId;
+            var claims = ClaimController.GetAllClaims()?
+                .Where(c => c != null)
+                .OrderByDescending(c => c.SubmissionDate)
+                .ToList() ?? new List<Claim>();
+
+            var selectItems = new List<SelectListItem>();
+            foreach (var claim in claims)
+            {
+                selectItems.Add(new SelectListItem
+                {
+                    Value = claim.ClaimID.ToString(),
+                    Text = $"Claim #{claim.ClaimID} - {claim.ClaimStatus} ({claim.ClaimDate:dd MMM yyyy})",
+                    Selected = claim.ClaimID == claimId && claimId != 0
+                });
+            }
+
+            selectItems.Add(new SelectListItem
+            {
+                Value = "0",
+                Text = "Unassigned (link later)",
+                Selected = claimId == 0 || !selectItems.Any(si => si.Selected)
+            });
+
+            ViewBag.ClaimSelectList = selectItems;
+            ViewBag.SelectedClaimID = claimId;
+
             return View();
         }
 
@@ -65,6 +80,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         {
             try
             {
+                var documents = LoadDocuments();
+
                 if (file == null || file.Length == 0)
                 {
                     TempData["ErrorMessage"] = "Please select a file to upload.";
@@ -104,9 +121,10 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 }
 
                 // Create document record
+                var nextId = documents.Any() ? documents.Max(d => d.DocumentID) + 1 : 1;
                 var document = new SupportingDocument
                 {
-                    DocumentID = _nextDocumentId++,
+                    DocumentID = nextId,
                     FileName = file.FileName,
                     FilePath = $"/uploads/documents/{fileName}",
                     FileSize = file.Length,
@@ -115,10 +133,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     ClaimID = claimId
                 };
 
-                _documents.Add(document);
-
-                // Save to file
-                SaveDocumentsToFile();
+                documents.Add(document);
+                SaveDocuments(documents);
 
                 TempData["SuccessMessage"] = $"File '{file.FileName}' uploaded successfully!";
                 return RedirectToAction("Index");
@@ -132,26 +148,142 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 
         public IActionResult GetDocumentsForClaim(int claimId)
         {
-            var documents = _documents.Where(d => d.ClaimID == claimId).ToList();
+            var documents = LoadDocuments()
+                .Where(d => d.ClaimID == claimId)
+                .OrderByDescending(d => d.UploadDate)
+                .Select(d => new
+                {
+                    documentId = d.DocumentID,
+                    fileName = d.FileName,
+                    fileSize = d.FileSize,
+                    uploadDate = d.UploadDate,
+                    filePath = d.FilePath,
+                    contentType = d.ContentType
+                })
+                .ToList();
             return Json(documents);
         }
-        private List<SupportingDocument> GetSampleDocuments()
-        {
-            return new List<SupportingDocument>
-            {
-                new SupportingDocument { DocumentID = 1, FileName = "timesheet_jan.pdf", FilePath = "/documents/timesheet_jan.pdf", UploadDate = DateTime.Now.AddDays(-5), ClaimID = 1 },
-                new SupportingDocument { DocumentID = 2, FileName = "contract_agreement.pdf", FilePath = "/documents/contract_agreement.pdf", UploadDate = DateTime.Now.AddDays(-12), ClaimID = 2 },
-                new SupportingDocument { DocumentID = 3, FileName = "work_log.xlsx", FilePath = "/documents/work_log.xlsx", UploadDate = DateTime.Now.AddDays(-18), ClaimID = 3 },
-                new SupportingDocument { DocumentID = 4, FileName = "invoice_feb.pdf", FilePath = "/documents/invoice_feb.pdf", UploadDate = DateTime.Now.AddDays(-1), ClaimID = 4 }
-            };
-        }
 
-        // File persistence methods
-        private static void SaveDocumentsToFile()
+        public IActionResult Download(int id)
         {
             try
             {
-                // Ensure the Data directory exists
+                var documents = LoadDocuments();
+
+                var document = documents.FirstOrDefault(d => d.DocumentID == id);
+                if (document == null)
+                {
+                    TempData["ErrorMessage"] = "Document not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Get the physical file path
+                var filePath = Path.Combine(_environment.WebRootPath, document.FilePath.TrimStart('/'));
+                
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    TempData["ErrorMessage"] = $"File not found: {document.FileName}";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Read file content
+                var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                
+                // Determine content type
+                var contentType = document.ContentType ?? "application/octet-stream";
+                
+                // Return file for download
+                return File(fileBytes, contentType, document.FileName);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error downloading document: {ex.Message}");
+                TempData["ErrorMessage"] = $"Error downloading file: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                var documents = LoadDocuments();
+
+                var document = documents.FirstOrDefault(d => d.DocumentID == id);
+                if (document == null)
+                {
+                    TempData["ErrorMessage"] = "Document not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var filePath = Path.Combine(_environment.WebRootPath, document.FilePath.TrimStart('/', '\\'));
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                documents.Remove(document);
+                SaveDocuments(documents);
+
+                TempData["SuccessMessage"] = $"Document '{document.FileName}' deleted successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting document: {ex.Message}");
+                TempData["ErrorMessage"] = "Error deleting document.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+        private static List<SupportingDocument> LoadDocuments()
+        {
+            try
+            {
+                if (!System.IO.File.Exists(DataFilePath))
+                {
+                    return new List<SupportingDocument>();
+                }
+
+                var json = System.IO.File.ReadAllText(DataFilePath);
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    return new List<SupportingDocument>();
+                }
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+
+                var documents = JsonSerializer.Deserialize<List<SupportingDocument>>(json, options) ?? new List<SupportingDocument>();
+                var validDocuments = documents
+                    .Where(d => d != null &&
+                                d.DocumentID > 0 &&
+                                !string.IsNullOrWhiteSpace(d.FileName) &&
+                                !string.IsNullOrWhiteSpace(d.FilePath))
+                    .ToList();
+
+                if (validDocuments.Count != documents.Count)
+                {
+                    SaveDocuments(validDocuments);
+                }
+
+                return validDocuments;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading documents from file: {ex.Message}");
+                return new List<SupportingDocument>();
+            }
+        }
+
+        private static void SaveDocuments(List<SupportingDocument> documents)
+        {
+            try
+            {
                 var dataDir = Path.GetDirectoryName(DataFilePath);
                 if (!string.IsNullOrEmpty(dataDir) && !Directory.Exists(dataDir))
                 {
@@ -164,36 +296,12 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 };
 
-                var json = JsonSerializer.Serialize(_documents, options);
+                var json = JsonSerializer.Serialize(documents, options);
                 System.IO.File.WriteAllText(DataFilePath, json);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error saving documents to file: {ex.Message}");
-            }
-        }
-
-        private static void LoadDocumentsFromFile()
-        {
-            try
-            {
-                if (System.IO.File.Exists(DataFilePath))
-                {
-                    var json = System.IO.File.ReadAllText(DataFilePath);
-                    if (!string.IsNullOrEmpty(json))
-                    {
-                        var documents = JsonSerializer.Deserialize<List<SupportingDocument>>(json);
-                        if (documents != null && documents.Any())
-                        {
-                            _documents = documents;
-                            _nextDocumentId = _documents.Max(d => d.DocumentID) + 1;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading documents from file: {ex.Message}");
             }
         }
     }

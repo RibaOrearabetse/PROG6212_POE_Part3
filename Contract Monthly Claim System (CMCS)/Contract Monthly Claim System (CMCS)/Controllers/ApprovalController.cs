@@ -53,8 +53,47 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 }
             }
 
-            var approvals = _approvals.OrderByDescending(a => a.ApprovalDate).ToList();
-            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Returning {approvals.Count} valid approvals to view");
+            // Always get fresh claims data to ensure we have the latest statuses
+            var allClaims = ClaimController.GetAllClaims();
+            if (allClaims == null || !allClaims.Any())
+            {
+                LoadClaimsFromFile();
+                allClaims = ClaimController.GetAllClaims();
+            }
+
+            // Force reload to get absolute latest data
+            ClaimController.GetAllClaims(); // This ensures data is loaded
+            allClaims = ClaimController.GetAllClaims();
+
+            // Filter to only show approvals for claims that are "Approved" (case-insensitive)
+            var approvedClaims = allClaims
+                .Where(c => c != null && 
+                           !string.IsNullOrEmpty(c.ClaimStatus) && 
+                           c.ClaimStatus.Trim().Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                .Select(c => c.ClaimID)
+                .ToHashSet();
+            
+            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Total claims loaded: {allClaims?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Approved claims found: {approvedClaims.Count}");
+            foreach (var claimId in approvedClaims)
+            {
+                var claim = allClaims.FirstOrDefault(c => c.ClaimID == claimId);
+                System.Diagnostics.Debug.WriteLine($"  - Claim ID {claimId}: Status = '{claim?.ClaimStatus}'");
+            }
+            
+            var approvals = _approvals
+                .Where(a => a != null && approvedClaims.Contains(a.ClaimID)) // Only approvals for approved claims
+                .OrderByDescending(a => a.ApprovalDate)
+                .ToList();
+            
+            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Total approvals: {_approvals.Count}");
+            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Returning {approvals.Count} approvals for approved claims");
+            foreach (var approval in approvals)
+            {
+                var claim = allClaims.FirstOrDefault(c => c.ClaimID == approval.ClaimID);
+                System.Diagnostics.Debug.WriteLine($"  - Approval ID {approval.ApprovalID} for Claim ID {approval.ClaimID}: Claim Status = '{claim?.ClaimStatus}'");
+            }
+            
             return View(approvals);
         }
 

@@ -28,6 +28,33 @@
         </div>
     </div>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            @TempData["InfoMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     @if (Model != null && Model.Any())
     {
         <div class="row">
@@ -37,11 +64,13 @@
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-light">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 text-primary">
+                                <h6 class="mb-0 text-primary text-truncate" title="@document.FileName">
                                     <i class="fas fa-file me-2"></i>
                                     @document.FileName
                                 </h6>
-                                <span class="badge bg-info">Claim #@document.ClaimID</span>
+                                <span class="badge bg-info">
+                                    @(document.ClaimID > 0 ? $"Claim #{document.ClaimID}" : "Unassigned")
+                                </span>
                             </div>
                         </div>
                         <div class="card-body">
@@ -51,35 +80,38 @@
                                     <div class="fw-bold">@((document.FileSize / 1024.0).ToString("F1")) KB</div>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted">Upload Date</small>
-                                    <div class="fw-bold">@document.UploadDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">Uploaded</small>
+                                    <div class="fw-bold">@document.UploadDate.ToString("dd MMM yyyy")</div>
                                 </div>
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <small class="text-muted">Content Type</small>
-                                <div class="fw-bold">@document.ContentType</div>
+                                <div class="fw-bold text-truncate">@document.ContentType</div>
                             </div>
 
-                            <div class="mb-3">
+                            <div>
                                 <small class="text-muted">File Path</small>
-                                <div class="text-truncate small text-muted">@document.FilePath</div>
+                                <div class="text-truncate small text-muted" title="@document.FilePath">@document.FilePath</div>
                             </div>
                         </div>
                         <div class="card-footer bg-light">
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                                 <a asp-action="Details" asp-route-id="@document.DocumentID" class="btn btn-outline-info btn-sm">
                                     <i class="fas fa-eye me-1"></i>
-                                    View
+                                    Details
                                 </a>
-                                <button type="button" class="btn btn-outline-success btn-sm" onclick="simulateDownload(@document.DocumentID, '@document.FileName')">
+                                <a asp-action="Download" asp-route-id="@document.DocumentID" class="btn btn-outline-success btn-sm">
                                     <i class="fas fa-download me-1"></i>
                                     Download
-                                </button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete(@document.DocumentID, '@document.FileName')">
-                                    <i class="fas fa-trash me-1"></i>
-                                    Delete
-                                </button>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@document.DocumentID" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete \"@document.FileName\"?');">
+                                        <i class="fas fa-trash me-1"></i>
+                                        Delete
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -94,7 +126,7 @@
                 <i class="fas fa-folder-open text-muted" style="font-size: 4rem;"></i>
             </div>
             <h4 class="text-muted">No Documents Found</h4>
-            <p class="text-muted">Upload your first supporting document to get started.</p>
+            <p class="text-muted">Upload supporting documents to keep track of claim evidence.</p>
             <a asp-action="Upload" class="btn btn-primary">
                 <i class="fas fa-upload me-1"></i>
                 Upload Document
@@ -104,13 +136,7 @@
 </div>
 
 <script>
-    function simulateDownload(documentId, fileName) {
-        alert('Download request received for Document ID: ' + documentId + ' (' + fileName + '). In a real application, this would download the file.');
-    }
-
     function confirmDelete(documentId, fileName) {
-        if (confirm('Are you sure you want to delete the document "' + fileName + '"? (This is a demo; no data will be deleted)')) {
-            alert('Delete request received for Document ID: ' + documentId + '. In a real application, this would delete the record.');
-        }
+        return confirm('Are you sure you want to delete the document "' + fileName + '"?');
     }
 </script>

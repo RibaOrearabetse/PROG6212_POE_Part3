@@ -43,5 +43,14 @@
     "claim": null,
     "approverID": 1,
     "approver": null
+  },
+  {
+    "approvalID": 6,
+    "approvalDate": "2025-11-17T22:08:54.8975072+02:00",
+    "comments": "Not approved",
+    "claimID": 8,
+    "claim": null,
+    "approverID": 1,
+    "approver": null
   }
 ]
