@@ -44,12 +44,23 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         // GET: HR/GenerateReport - Generate a report/invoice
         public IActionResult GenerateReport(int? userId = null, string status = null, DateTime? startDate = null, DateTime? endDate = null)
         {
-            var claims = ClaimController.GetAllClaims();
+            // Force reload of claims to ensure we have the latest data including any user updates
+            System.Diagnostics.Debug.WriteLine("HRController.GenerateReport: Starting report generation with force reload...");
+            var claims = ClaimController.GetAllClaims(forceReload: true);
             var users = UserController.GetAllUsers();
 
             // Debug logging
             System.Diagnostics.Debug.WriteLine($"HRController.GenerateReport - Total claims loaded: {claims?.Count ?? 0}");
             System.Diagnostics.Debug.WriteLine($"HRController.GenerateReport - Filters - userId: {userId}, status: {status}, startDate: {startDate}, endDate: {endDate}");
+            
+            // Log UserID information for first few claims
+            if (claims != null && claims.Any())
+            {
+                foreach (var c in claims.Take(5))
+                {
+                    System.Diagnostics.Debug.WriteLine($"  Claim #{c.ClaimID}: UserID = {c.UserID}");
+                }
+            }
 
             // Ensure claims is not null
             if (claims == null || !claims.Any())
@@ -89,16 +100,21 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 
             var reportData = filteredClaims
                 .Where(c => c != null && c.ClaimID > 0) // Filter out null or invalid claims
-                .Select(c => new ClaimReportItem
+                .Select(c => 
                 {
-                    ClaimID = c.ClaimID,
-                    UserName = (users?.FirstOrDefault(u => u.UserID == c.UserID)?.FirstName ?? "") + " " + (users?.FirstOrDefault(u => u.UserID == c.UserID)?.LastName ?? ""),
-                    ClaimDate = c.ClaimDate,
-                    Status = c.ClaimStatus ?? "Unknown",
-                    HoursWorked = c.HoursWorked,
-                    HourlyRate = c.HourlyRate,
-                    TotalAmount = c.TotalAmount,
-                    SubmissionDate = c.SubmissionDate
+                    // Look up user once per claim to get the latest user assignment
+                    var user = users?.FirstOrDefault(u => u.UserID == c.UserID);
+                    return new ClaimReportItem
+                    {
+                        ClaimID = c.ClaimID,
+                        UserName = user != null ? $"{user.FirstName} {user.LastName}".Trim() : "Unknown User",
+                        ClaimDate = c.ClaimDate,
+                        Status = c.ClaimStatus ?? "Unknown",
+                        HoursWorked = c.HoursWorked,
+                        HourlyRate = c.HourlyRate,
+                        TotalAmount = c.TotalAmount,
+                        SubmissionDate = c.SubmissionDate
+                    };
                 })
                 .ToList();
 
@@ -117,7 +133,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         // GET: HR/ExportReport - Export report as JSON (for now, can be extended to PDF)
         public IActionResult ExportReport(int? userId = null, string status = null, DateTime? startDate = null, DateTime? endDate = null)
         {
-            var claims = ClaimController.GetAllClaims();
+            // Force reload of claims to ensure we have the latest data including any user updates
+            var claims = ClaimController.GetAllClaims(forceReload: true);
             var users = UserController.GetAllUsers();
 
             // Filter claims based on parameters
@@ -144,16 +161,21 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             }
 
             var reportData = filteredClaims
-                .Select(c => new
+                .Select(c => 
                 {
-                    ClaimID = c.ClaimID,
-                    UserName = users?.FirstOrDefault(u => u.UserID == c.UserID)?.FirstName + " " + users?.FirstOrDefault(u => u.UserID == c.UserID)?.LastName,
-                    ClaimDate = c.ClaimDate.ToString("yyyy-MM-dd"),
-                    Status = c.ClaimStatus,
-                    HoursWorked = c.HoursWorked,
-                    HourlyRate = c.HourlyRate,
-                    TotalAmount = c.TotalAmount,
-                    SubmissionDate = c.SubmissionDate.ToString("yyyy-MM-dd HH:mm:ss")
+                    // Look up user once per claim to get the latest user assignment
+                    var user = users?.FirstOrDefault(u => u.UserID == c.UserID);
+                    return new
+                    {
+                        ClaimID = c.ClaimID,
+                        UserName = user != null ? $"{user.FirstName} {user.LastName}".Trim() : "Unknown User",
+                        ClaimDate = c.ClaimDate.ToString("yyyy-MM-dd"),
+                        Status = c.ClaimStatus,
+                        HoursWorked = c.HoursWorked,
+                        HourlyRate = c.HourlyRate,
+                        TotalAmount = c.TotalAmount,
+                        SubmissionDate = c.SubmissionDate.ToString("yyyy-MM-dd HH:mm:ss")
+                    };
                 })
                 .ToList();
 

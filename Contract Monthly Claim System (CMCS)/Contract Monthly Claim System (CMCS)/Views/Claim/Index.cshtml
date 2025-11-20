@@ -41,12 +41,107 @@
     }
 </div>
 
+@Html.AntiForgeryToken()
+
 <script>
     function confirmDelete(claimId) {
         if (confirm('Are you sure you want to delete this claim? (This is a demo; no data will be deleted)')) {
             alert('Delete request received for Claim ID: ' + claimId + '. In a real application, this would delete the record.');
         }
     }
+
+    // Handle user dropdown changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const userDropdowns = document.querySelectorAll('.user-select-dropdown');
+        
+        userDropdowns.forEach(function(dropdown) {
+            const originalValue = dropdown.value;
+            dropdown.setAttribute('data-original-value', originalValue);
+            
+            dropdown.addEventListener('change', function() {
+                const claimId = parseInt(this.getAttribute('data-claim-id'));
+                const userId = parseInt(this.value);
+                const originalValue = this.getAttribute('data-original-value');
+                const displayDiv = document.getElementById('user-display-' + claimId);
+                
+                if (!userId || userId <= 0) {
+                    alert('Please select a valid user.');
+                    this.value = originalValue;
+                    return;
+                }
+
+                // Disable dropdown while updating
+                this.disabled = true;
+                
+                // Show loading state
+                if (displayDiv) {
+                    displayDiv.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin me-1"></i>Updating...</small>';
+                }
+
+                // Get anti-forgery token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('claimId', claimId);
+                formData.append('userId', userId);
+                formData.append('__RequestVerificationToken', token);
+
+                // Send AJAX request
+                fetch('/Claim/UpdateUser', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': token
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update display
+                        if (displayDiv) {
+                            displayDiv.innerHTML = '<small class="text-success"><i class="fas fa-check me-1"></i>Updated to: ' + data.userName + '</small>';
+                            setTimeout(function() {
+                                displayDiv.innerHTML = '<small class="text-muted"><i class="fas fa-user me-1"></i><a href="/User/Details/' + data.userId + '" class="text-decoration-none">View User Details</a></small>';
+                            }, 2000);
+                        }
+                        // Update original value
+                        this.setAttribute('data-original-value', userId.toString());
+                        
+                        // Show success message
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                        successMsg.style.zIndex = '9999';
+                        successMsg.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message + 
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+                        document.body.appendChild(successMsg);
+                        setTimeout(function() {
+                            successMsg.remove();
+                        }, 3000);
+                    } else {
+                        // Revert dropdown
+                        this.value = originalValue;
+                        alert(data.message || 'Failed to update user.');
+                        if (displayDiv) {
+                            displayDiv.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Update failed</small>';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.value = originalValue;
+                    alert('An error occurred while updating the user.');
+                    if (displayDiv) {
+                        displayDiv.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Error occurred</small>';
+                    }
+                })
+                .finally(function() {
+                    // Re-enable dropdown
+                    dropdown.disabled = false;
+                });
+            });
+        });
+    });
 </script>
 
 <div class="table-responsive">
@@ -60,18 +155,19 @@
                 <th>Hourly Rate</th>
                 <th>Total Amount</th>
                 <th>Submission Date</th>
-                <th>User ID</th>
+                <th>User</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @if (Model != null && Model.Any())
             {
-                @foreach (var item in Model)
+                var users = Contract_Monthly_Claim_System__CMCS_.Controllers.UserController.GetAllUsers();
+                foreach (var item in Model)
                 {
-                    // Only display valid claims (filter out corrupted ones)
-                    @if (item.ClaimID > 0 && item.ClaimDate.Year > 2000 && item.HoursWorked > 0 && item.HourlyRate > 0)
+                    if (item.ClaimID > 0 && item.ClaimDate.Year > 2000 && item.HoursWorked > 0 && item.HourlyRate > 0)
                     {
+                        var claimUser = users?.FirstOrDefault(u => u.UserID == item.UserID);
                         <tr>
                             <td>@item.ClaimID</td>
                             <td>@item.ClaimDate.ToShortDateString()</td>
@@ -88,7 +184,36 @@
                             <td>R @item.HourlyRate.ToString("N2")</td>
                             <td>R @item.TotalAmount.ToString("N2")</td>
                             <td>@item.SubmissionDate.ToShortDateString()</td>
-                            <td>@item.UserID</td>
+                            <td>
+                                <div class="user-select-container" data-claim-id="@item.ClaimID">
+                                    <select class="form-select form-select-sm user-select-dropdown" data-claim-id="@item.ClaimID" style="min-width: 200px;">
+                                        @if (ViewBag.Users != null)
+                                        {
+                                            foreach (var userOption in ViewBag.Users)
+                                            {
+                                                var isSelected = userOption.Value == item.UserID.ToString();
+                                                <option value="@userOption.Value" selected="@isSelected">@userOption.Text</option>
+                                            }
+                                        }
+                                    </select>
+                                    <div class="user-display mt-1" id="user-display-@item.ClaimID">
+                                        @if (claimUser != null)
+                                        {
+                                            <small class="text-muted">
+                                                <a asp-controller="User" asp-action="Details" asp-route-id="@claimUser.UserID" class="text-decoration-none">
+                                                    <i class="fas fa-user me-1"></i>View User Details
+                                                </a>
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Invalid User
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a asp-controller="Tracking" asp-action="Details" asp-route-id="@item.ClaimID" class="btn btn-primary btn-sm">
@@ -96,6 +221,9 @@
                                     </a>
                                     <a asp-action="Details" asp-route-id="@item.ClaimID" class="btn btn-info btn-sm">
                                         <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.ClaimID" class="btn btn-warning btn-sm" title="Edit claim and change user">
+                                        <i class="fas fa-edit me-1"></i>Edit
                                     </a>
                                     @if (item.ClaimStatus == "Pending")
                                     {
@@ -108,7 +236,8 @@
                         </tr>
                     }
                 }
-                @if (!Model.Any(c => c.ClaimID > 0 && c.ClaimDate.Year > 2000 && c.HoursWorked > 0 && c.HourlyRate > 0))
+                var hasValidClaims = Model.Any(c => c.ClaimID > 0 && c.ClaimDate.Year > 2000 && c.HoursWorked > 0 && c.HourlyRate > 0);
+                if (!hasValidClaims)
                 {
                     <tr>
                         <td colspan="9" class="text-center">No valid claims found.</td>

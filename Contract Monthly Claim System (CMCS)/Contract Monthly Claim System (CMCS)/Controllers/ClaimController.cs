@@ -17,6 +17,14 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 LoadClaimsFromFile();
             }
 
+            // Populate users for dropdown
+            var users = UserController.GetAllUsers();
+            ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Value = u.UserID.ToString(),
+                Text = $"{u.FirstName} {u.LastName} ({u.Email})"
+            }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+
             // Filter out corrupted/empty claims (those with ClaimID = 0, default dates, or zero amounts)
             var validClaims = _claims.Where(c => 
                 c.ClaimID > 0 && 
@@ -90,10 +98,21 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         }
         public IActionResult Create()
         {
+            var users = UserController.GetAllUsers();
             var viewModel = new ClaimCreateViewModel
             {
-                ClaimDate = DateTime.Now
+                ClaimDate = DateTime.Now,
+                UserID = users?.FirstOrDefault()?.UserID ?? 0
             };
+            
+            // Populate users for dropdown
+            ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Value = u.UserID.ToString(),
+                Text = $"{u.FirstName} {u.LastName} ({u.Email})",
+                Selected = u.UserID == viewModel.UserID
+            }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+            
             return View(viewModel);
         }
 
@@ -110,8 +129,29 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 LoadClaimsFromFile();
             }
 
+            // Validate UserID exists
+            var users = UserController.GetAllUsers();
+            if (viewModel.UserID <= 0 || !users.Any(u => u.UserID == viewModel.UserID))
+            {
+                ModelState.AddModelError("UserID", "Please select a valid user.");
+            }
+
             if (ModelState.IsValid)
             {
+                // Verify user exists
+                var selectedUser = users?.FirstOrDefault(u => u.UserID == viewModel.UserID);
+                if (selectedUser == null)
+                {
+                    TempData["ErrorMessage"] = "Selected user not found. Please select a valid user.";
+                    ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = u.UserID.ToString(),
+                        Text = $"{u.FirstName} {u.LastName} ({u.Email})",
+                        Selected = u.UserID == viewModel.UserID
+                    }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+                    return View(viewModel);
+                }
+
                 // Create a new Claim object from the ViewModel
                 var claim = new Claim
                 {
@@ -122,7 +162,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     Notes = viewModel.Notes,
                     SubmissionDate = DateTime.Now,
                     ClaimStatus = "Pending",
-                    UserID = 1, // For demo purposes - in real app, get from session/auth
+                    UserID = viewModel.UserID, // Use the selected user ID
                     TotalAmount = viewModel.HoursWorked * viewModel.HourlyRate
                 };
 
@@ -145,6 +185,14 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 {
                     System.Diagnostics.Debug.WriteLine($"Validation Error: {error.ErrorMessage}");
                 }
+                
+                // Repopulate users dropdown on validation error
+                ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = u.UserID.ToString(),
+                    Text = $"{u.FirstName} {u.LastName} ({u.Email})",
+                    Selected = u.UserID == viewModel.UserID
+                }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
             }
 
             return View(viewModel);
@@ -171,6 +219,16 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 TempData["ErrorMessage"] = $"Claim #{id} not found.";
                 return RedirectToAction(nameof(Index));
             }
+
+            // Populate users for dropdown
+            var users = UserController.GetAllUsers();
+            ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Value = u.UserID.ToString(),
+                Text = $"{u.FirstName} {u.LastName} ({u.Email})",
+                Selected = u.UserID == claim.UserID
+            }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+
             return View(claim);
         }
 
@@ -193,16 +251,42 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
+                // Validate UserID exists
+                var users = UserController.GetAllUsers();
+                if (claim.UserID <= 0 || !users.Any(u => u.UserID == claim.UserID))
+                {
+                    ModelState.AddModelError("UserID", "Please select a valid user.");
+                    ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = u.UserID.ToString(),
+                        Text = $"{u.FirstName} {u.LastName} ({u.Email})",
+                        Selected = u.UserID == claim.UserID
+                    }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
+                    return View(existingClaim);
+                }
+
                 // Validate input
                 if (claim.HoursWorked < 0.1m || claim.HoursWorked > 168m)
                 {
                     ModelState.AddModelError("HoursWorked", "Hours worked must be between 0.1 and 168");
+                    ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = u.UserID.ToString(),
+                        Text = $"{u.FirstName} {u.LastName} ({u.Email})",
+                        Selected = u.UserID == claim.UserID
+                    }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
                     return View(existingClaim);
                 }
 
                 if (claim.HourlyRate <= 0)
                 {
                     ModelState.AddModelError("HourlyRate", "Hourly rate must be greater than 0");
+                    ViewBag.Users = users?.Select(u => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                    {
+                        Value = u.UserID.ToString(),
+                        Text = $"{u.FirstName} {u.LastName} ({u.Email})",
+                        Selected = u.UserID == claim.UserID
+                    }).ToList() ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>();
                     return View(existingClaim);
                 }
 
@@ -213,6 +297,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 existingClaim.TotalAmount = claim.HoursWorked * claim.HourlyRate; // Recalculate total
                 existingClaim.ClaimStatus = claim.ClaimStatus ?? existingClaim.ClaimStatus;
                 existingClaim.Notes = claim.Notes;
+                existingClaim.UserID = claim.UserID; // Update UserID
                 existingClaim.LastUpdated = DateTime.Now;
 
                 // Save to file
@@ -293,16 +378,22 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         }
 
         // Static method to get all claims for use by other controllers
-        public static List<Claim> GetAllClaims()
+        public static List<Claim> GetAllClaims(bool forceReload = false)
         {
-            // Ensure data is loaded
-            if (!_claims.Any())
+            // Force reload from file if requested (e.g., when generating reports to ensure latest data)
+            if (forceReload)
+            {
+                System.Diagnostics.Debug.WriteLine("GetAllClaims: Force reloading from file...");
+                LoadClaimsFromFile();
+            }
+            else if (!_claims.Any())
             {
                 LoadClaimsFromFile();
             }
 
             // Filter out corrupted claims
             var validClaims = _claims.Where(c => 
+                c != null &&
                 c.ClaimID > 0 && 
                 c.ClaimDate.Year > 2000 && 
                 c.SubmissionDate.Year > 2000 &&
@@ -314,6 +405,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             // Clean up if needed
             if (_claims.Count != validClaims.Count)
             {
+                System.Diagnostics.Debug.WriteLine($"GetAllClaims: Filtered out {_claims.Count - validClaims.Count} corrupted claims");
                 _claims = validClaims;
                 if (_claims.Any())
                 {
@@ -329,8 +421,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 SaveClaimsToFile();
             }
 
-            System.Diagnostics.Debug.WriteLine($"ClaimController.GetAllClaims - Returning {_claims.Count} valid claims");
-            return _claims;
+            System.Diagnostics.Debug.WriteLine($"ClaimController.GetAllClaims - Returning {validClaims.Count} valid claims (forceReload: {forceReload})");
+            return validClaims;
         }
 
         // Static method to update a claim
@@ -349,6 +441,57 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         public static void AddClaim(Claim claim)
         {
             _claims.Add(claim);
+        }
+
+        // POST: Claim/UpdateUser - Update only the UserID for a claim
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateUser(int claimId, int userId)
+        {
+            try
+            {
+                // Load data from file if not already loaded
+                if (!_claims.Any())
+                {
+                    LoadClaimsFromFile();
+                }
+
+                var claim = _claims.FirstOrDefault(c => c.ClaimID == claimId);
+                if (claim == null)
+                {
+                    return Json(new { success = false, message = "Claim not found." });
+                }
+
+                // Validate UserID exists
+                var users = UserController.GetAllUsers();
+                if (userId <= 0 || !users.Any(u => u.UserID == userId))
+                {
+                    return Json(new { success = false, message = "Invalid user selected." });
+                }
+
+                // Update UserID
+                var oldUserId = claim.UserID;
+                claim.UserID = userId;
+                claim.LastUpdated = DateTime.Now;
+
+                System.Diagnostics.Debug.WriteLine($"UpdateUser: Claim #{claimId} - UserID changed from {oldUserId} to {userId}");
+
+                // Save to file immediately
+                SaveClaimsToFile();
+                
+                // Verify the save by checking file contents
+                System.Diagnostics.Debug.WriteLine($"UpdateUser: Saved claim #{claimId} with UserID {userId} to file");
+
+                var selectedUser = users.FirstOrDefault(u => u.UserID == userId);
+                var userName = selectedUser != null ? $"{selectedUser.FirstName} {selectedUser.LastName}" : "Unknown";
+
+                return Json(new { success = true, message = $"User updated to {userName}", userName = userName, userId = userId });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating user: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while updating the user." });
+            }
         }
 
         // Method to reset static data for testing
@@ -380,6 +523,9 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 var json = JsonSerializer.Serialize(_claims, options);
                 System.IO.File.WriteAllText(DataFilePath, json);
                 System.Diagnostics.Debug.WriteLine($"Successfully saved {_claims.Count} claims to file: {DataFilePath}");
+                
+                // Force file system to flush the write to ensure data is persisted
+                System.IO.File.SetLastWriteTime(DataFilePath, DateTime.Now);
             }
             catch (Exception ex)
             {
@@ -405,9 +551,16 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                         var claims = JsonSerializer.Deserialize<List<Claim>>(json, options);
                         if (claims != null && claims.Any())
                         {
+                            var previousCount = _claims.Count;
                             _claims = claims;
                             _nextClaimId = _claims.Max(c => c.ClaimID) + 1;
-                            System.Diagnostics.Debug.WriteLine($"Loaded {_claims.Count} claims from file: {DataFilePath}. Next Claim ID will be: {_nextClaimId}");
+                            System.Diagnostics.Debug.WriteLine($"LoadClaimsFromFile: Loaded {_claims.Count} claims from file: {DataFilePath}. Previous count: {previousCount}. Next Claim ID will be: {_nextClaimId}");
+                            
+                            // Log UserID information for debugging
+                            foreach (var c in _claims.Take(5)) // Log first 5 claims
+                            {
+                                System.Diagnostics.Debug.WriteLine($"  Claim #{c.ClaimID}: UserID = {c.UserID}");
+                            }
                         }
                         else
                         {

@@ -20,7 +20,7 @@
     "passwordHash": "",
     "contactNumber": "098-765-4321",
     "hourlyRate": 0,
-    "roleID": 2,
+    "roleID": 1,
     "role": null,
     "claims": [],
     "approvals": []
@@ -58,8 +58,21 @@
     "email": "User5@gmail.com",
     "passwordHash": "default_password_hash",
     "contactNumber": "0778889999",
-    "hourlyRate": 400,
+    "hourlyRate": 5000,
     "roleID": 4,
+    "role": null,
+    "claims": [],
+    "approvals": []
+  },
+  {
+    "userID": 6,
+    "firstName": "User",
+    "lastName": "1",
+    "email": "User1@gmail.com",
+    "passwordHash": "default_password_hash",
+    "contactNumber": "0798652349",
+    "hourlyRate": 4000,
+    "roleID": 2,
     "role": null,
     "claims": [],
     "approvals": []

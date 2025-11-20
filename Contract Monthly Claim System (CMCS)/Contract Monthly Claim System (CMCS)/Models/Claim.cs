@@ -24,6 +24,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Models
         public string? Notes { get; set; }
 
         [ForeignKey("User")]
+        [Required(ErrorMessage = "User is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "A valid user must be selected")]
         public int UserID { get; set; }
 
         [NotMapped]

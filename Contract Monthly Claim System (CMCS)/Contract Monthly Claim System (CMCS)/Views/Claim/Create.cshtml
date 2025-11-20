@@ -49,6 +49,25 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-4">
+                                <label asp-for="UserID" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1 text-primary"></i>
+                                    User <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="UserID" class="form-select form-control-lg" required>
+                                    <option value="">-- Select User --</option>
+                                    @if (ViewBag.Users != null)
+                                    {
+                                        foreach (var user in ViewBag.Users)
+                                        {
+                                            <option value="@user.Value" selected="@user.Selected">@user.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="UserID" class="text-danger"></span>
+                                <div class="form-text">Select the user this claim belongs to</div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
                                 <label asp-for="ClaimDate" class="form-label fw-bold">
                                     <i class="fas fa-calendar me-1 text-primary"></i>
                                     Claim Date

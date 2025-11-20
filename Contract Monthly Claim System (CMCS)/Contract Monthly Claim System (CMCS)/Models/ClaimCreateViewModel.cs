@@ -15,6 +15,11 @@ namespace Contract_Monthly_Claim_System__CMCS_.Models
         [Range(0.01, double.MaxValue, ErrorMessage = "Hourly rate must be greater than 0")]
         public decimal HourlyRate { get; set; }
 
+        [Required(ErrorMessage = "User is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "A valid user must be selected")]
+        [Display(Name = "User")]
+        public int UserID { get; set; }
+
         public string? Notes { get; set; }
     }
 }

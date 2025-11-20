@@ -64,6 +64,22 @@
             </div>
 
             <div class="form-group mb-3">
+                <label asp-for="UserID" class="form-label">User <span class="text-danger">*</span></label>
+                <select asp-for="UserID" class="form-select" required>
+                    <option value="">-- Select User --</option>
+                    @if (ViewBag.Users != null)
+                    {
+                        foreach (var user in ViewBag.Users)
+                        {
+                            <option value="@user.Value" selected="@user.Selected">@user.Text</option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="UserID" class="text-danger"></span>
+                <small class="form-text text-muted">Select the user this claim belongs to</small>
+            </div>
+
+            <div class="form-group mb-3">
                 <label asp-for="ClaimStatus" class="form-label">Status</label>
                 <select asp-for="ClaimStatus" class="form-select">
                     <option value="Pending">Pending</option>
