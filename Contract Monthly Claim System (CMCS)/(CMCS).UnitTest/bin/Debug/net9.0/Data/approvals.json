@@ -1,47 +1,47 @@
 [
   {
-    "ApprovalID": 1,
-    "ApprovalDate": "2025-10-20T00:17:52.8268923+02:00",
-    "Comments": "Approved - documentation complete",
-    "ClaimID": 2,
-    "Claim": null,
-    "ApproverID": 4,
-    "Approver": null
+    "approvalID": 2,
+    "approvalDate": "2025-11-17T21:38:40.7020787+02:00",
+    "comments": "Approved by coordinator/manager",
+    "claimID": 5,
+    "claim": null,
+    "approverID": 1,
+    "approver": null
   },
   {
-    "ApprovalID": 2,
-    "ApprovalDate": "2025-10-13T00:17:52.8271558+02:00",
-    "Comments": "Rejected - insufficient documentation",
-    "ClaimID": 3,
-    "Claim": null,
-    "ApproverID": 3,
-    "Approver": null
+    "approvalID": 3,
+    "approvalDate": "2025-11-17T21:58:55.3400241+02:00",
+    "comments": "Approved by coordinator/manager",
+    "claimID": 4,
+    "claim": null,
+    "approverID": 1,
+    "approver": null
   },
   {
-    "ApprovalID": 3,
-    "ApprovalDate": "2025-10-22T00:17:52.8271586+02:00",
-    "Comments": "Approved with conditions",
-    "ClaimID": 1,
-    "Claim": null,
-    "ApproverID": 4,
-    "Approver": null
+    "approvalID": 6,
+    "approvalDate": "2025-11-17T22:08:54.8975072+02:00",
+    "comments": "Not approved",
+    "claimID": 8,
+    "claim": null,
+    "approverID": 1,
+    "approver": null
   },
   {
-    "ApprovalID": 4,
-    "ApprovalDate": "2025-10-23T00:22:53.6022926+02:00",
-    "Comments": "Approved by coordinator/manager",
-    "ClaimID": 1,
-    "Claim": null,
-    "ApproverID": 1,
-    "Approver": null
+    "approvalID": 7,
+    "approvalDate": "2025-11-21T12:42:19.6875843+02:00",
+    "comments": "Status updated to Approved via Tracking page",
+    "claimID": 10,
+    "claim": null,
+    "approverID": 1,
+    "approver": null
   },
   {
-    "ApprovalID": 5,
-    "ApprovalDate": "2025-10-23T00:23:27.8101841+02:00",
-    "Comments": "Failed",
-    "ClaimID": 1,
-    "Claim": null,
-    "ApproverID": 1,
-    "Approver": null
+    "approvalID": 8,
+    "approvalDate": "2025-11-21T12:51:37.0989311+02:00",
+    "comments": "Approved by coordinator/manager",
+    "claimID": 11,
+    "claim": null,
+    "approverID": 1,
+    "approver": null
   }
 ]

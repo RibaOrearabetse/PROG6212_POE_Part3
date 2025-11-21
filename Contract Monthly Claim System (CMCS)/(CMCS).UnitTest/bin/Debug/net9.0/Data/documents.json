@@ -1,62 +1,32 @@
 [
   {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
-    "documentID": 0,
-    "fileName": "",
-    "filePath": "",
-    "fileSize": 0,
-    "contentType": "",
-    "uploadDate": "0001-01-01T00:00:00",
-    "claimID": 0,
-    "claim": null
-  },
-  {
     "documentID": 1,
     "fileName": "Programming 2B PROG6212 POE Part 1 ST10446648 Orearabetse Riba.docx",
-    "filePath": "/uploads/documents/d7eac3fa-76b6-4fe4-80d6-a6861d9ec6a1.docx",
+    "filePath": "/uploads/documents/271e542d-fe4c-4133-990a-9b6ea75b6d37.docx",
     "fileSize": 96048,
     "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "uploadDate": "2025-10-23T01:03:06.0969267+02:00",
+    "uploadDate": "2025-10-24T10:25:51.604148+02:00",
     "claimID": 0,
+    "claim": null
+  },
+  {
+    "documentID": 2,
+    "fileName": "INSY6112 ST10446648 ICE task 1.docx",
+    "filePath": "/uploads/documents/1f0a99a4-abc8-4604-8b26-b9285766c7df.docx",
+    "fileSize": 557553,
+    "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "uploadDate": "2025-11-19T10:32:25.7784322+02:00",
+    "claimID": 2,
+    "claim": null
+  },
+  {
+    "documentID": 3,
+    "fileName": "Information systems 1b INSY6112 ICE task 6 ST10446648.docx",
+    "filePath": "/uploads/documents/e61ce571-f83b-4f0c-826d-0b51e89212e1.docx",
+    "fileSize": 46990,
+    "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "uploadDate": "2025-11-21T12:27:19.9326091+02:00",
+    "claimID": 10,
     "claim": null
   }
 ]

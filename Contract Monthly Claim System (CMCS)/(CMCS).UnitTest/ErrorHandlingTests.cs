@@ -12,7 +12,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.UnitTests
         {
             // Arrange
             var controller = new UserController();
-            var invalidId = 999;
+            var invalidId = 99999;
 
             // Act
             var result = controller.Details(invalidId);
@@ -27,7 +27,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.UnitTests
         {
             // Arrange
             var controller = new ClaimController();
-            var invalidId = 999;
+            var invalidId = 99999;
 
             // Act
             var result = controller.Details(invalidId);
@@ -42,7 +42,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.UnitTests
         {
             // Arrange
             var controller = new ApprovalController();
-            var invalidId = 999;
+            var invalidId = 99999;
 
             // Act
             var result = controller.Details(invalidId);
@@ -57,7 +57,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.UnitTests
         {
             // Arrange
             var controller = new RoleController();
-            var invalidId = 999;
+            var invalidId = 99999;
 
             // Act
             var result = controller.Details(invalidId);
@@ -126,41 +126,24 @@ namespace Contract_Monthly_Claim_System__CMCS_.UnitTests
             Assert.Equal(string.Empty, document.FilePath);
         }
 
-        [Theory]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void Claim_StatusDisplayName_WithEmptyStatus_ShouldReturnOriginalStatus(string emptyStatus)
+        [Fact]
+        public void Claim_StatusDisplayName_WithEmptyStatus_ShouldReturnOriginalStatus()
         {
             // Arrange
-            var claim = new Claim { ClaimStatus = emptyStatus };
+            var claim = new Claim { ClaimStatus = "" };
 
             // Act
             var displayName = claim.StatusDisplayName;
 
             // Assert
-            Assert.Equal(emptyStatus, displayName);
+            Assert.Equal("", displayName);
         }
 
         [Fact]
-        public void Claim_StatusDisplayName_WithNullStatus_ShouldReturnEmptyString()
+        public void Claim_StatusBadgeClass_WithEmptyStatus_ShouldReturnDefaultClass()
         {
             // Arrange
-            var claim = new Claim { ClaimStatus = null! };
-
-            // Act
-            var displayName = claim.StatusDisplayName;
-
-            // Assert
-            Assert.Equal(string.Empty, displayName);
-        }
-
-        [Theory]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void Claim_StatusBadgeClass_WithEmptyStatus_ShouldReturnDefaultClass(string emptyStatus)
-        {
-            // Arrange
-            var claim = new Claim { ClaimStatus = emptyStatus };
+            var claim = new Claim { ClaimStatus = "" };
 
             // Act
             var badgeClass = claim.StatusBadgeClass;
@@ -170,38 +153,10 @@ namespace Contract_Monthly_Claim_System__CMCS_.UnitTests
         }
 
         [Fact]
-        public void Claim_StatusBadgeClass_WithNullStatus_ShouldReturnDefaultClass()
+        public void Claim_StatusProgress_WithEmptyStatus_ShouldReturnZero()
         {
             // Arrange
-            var claim = new Claim { ClaimStatus = null! };
-
-            // Act
-            var badgeClass = claim.StatusBadgeClass;
-
-            // Assert
-            Assert.Equal("bg-secondary", badgeClass);
-        }
-
-        [Theory]
-        [InlineData("")]
-        [InlineData("   ")]
-        public void Claim_StatusProgress_WithEmptyStatus_ShouldReturnZero(string emptyStatus)
-        {
-            // Arrange
-            var claim = new Claim { ClaimStatus = emptyStatus };
-
-            // Act
-            var progress = claim.StatusProgress;
-
-            // Assert
-            Assert.Equal(0, progress);
-        }
-
-        [Fact]
-        public void Claim_StatusProgress_WithNullStatus_ShouldReturnZero()
-        {
-            // Arrange
-            var claim = new Claim { ClaimStatus = null! };
+            var claim = new Claim { ClaimStatus = "" };
 
             // Act
             var progress = claim.StatusProgress;

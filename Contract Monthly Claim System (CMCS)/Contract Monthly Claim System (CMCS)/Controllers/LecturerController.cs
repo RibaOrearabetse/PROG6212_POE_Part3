@@ -4,19 +4,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 {
     public class LecturerController : Controller
     {
         private readonly CmcsDbContext _context;
+        private readonly IWebHostEnvironment _environment;
         private const int LecturerRoleID = 1; // RoleID for Lecturer
         private const int MaxHoursPerMonth = 180;
         private const decimal DefaultLecturerHourlyRate = 450m;
+        private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
+        private static readonly string[] AllowedExtensions = { ".pdf", ".docx", ".xlsx", ".doc", ".xls", ".jpg", ".jpeg", ".png" };
+        private static readonly string DocumentsDataFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "documents.json");
 
-        public LecturerController(CmcsDbContext context)
+        public LecturerController(CmcsDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         // GET: Lecturer/Login
@@ -201,7 +207,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         // POST: Lecturer/SubmitClaim
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitClaim(ClaimCreateViewModel viewModel)
+        public async Task<IActionResult> SubmitClaim(ClaimCreateViewModel viewModel, List<IFormFile> supportingDocuments)
         {
             var lecturerId = HttpContext.Session.GetInt32("LecturerID");
             if (lecturerId == null)
@@ -239,6 +245,24 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                         $"This submission would exceed the monthly limit of {MaxHoursPerMonth} hours. You have {remainingHours:F1} hours remaining this month.");
                 }
 
+                // Validate uploaded files
+                if (supportingDocuments != null && supportingDocuments.Any())
+                {
+                    foreach (var file in supportingDocuments)
+                    {
+                        if (file.Length > MaxFileSize)
+                        {
+                            ModelState.AddModelError("", $"File '{file.FileName}' exceeds the maximum size of 10MB.");
+                        }
+
+                        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                        if (!AllowedExtensions.Contains(fileExtension))
+                        {
+                            ModelState.AddModelError("", $"File '{file.FileName}' has an invalid file type. Allowed types: {string.Join(", ", AllowedExtensions)}");
+                        }
+                    }
+                }
+
                 // Ensure UserID matches logged-in lecturer
                 viewModel.UserID = lecturer.UserID;
                 viewModel.HourlyRate = lecturer.HourlyRate; // Always use lecturer's hourly rate from HR
@@ -269,7 +293,17 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 
                     System.Diagnostics.Debug.WriteLine($"LecturerController: Claim #{claim.ClaimID} created for UserID {lecturer.UserID}");
 
-                    TempData["SuccessMessage"] = $"Claim #{claim.ClaimID} submitted successfully! Total Amount: R {claim.TotalAmount:N2}";
+                    // Handle file uploads if any
+                    if (supportingDocuments != null && supportingDocuments.Any(f => f != null && f.Length > 0))
+                    {
+                        var uploadedCount = await SaveSupportingDocumentsAsync(supportingDocuments, claim.ClaimID);
+                        TempData["SuccessMessage"] = $"Claim #{claim.ClaimID} submitted successfully with {uploadedCount} document(s)! Total Amount: R {claim.TotalAmount:N2}";
+                    }
+                    else
+                    {
+                        TempData["SuccessMessage"] = $"Claim #{claim.ClaimID} submitted successfully! Total Amount: R {claim.TotalAmount:N2}";
+                    }
+
                     return RedirectToAction(nameof(MyClaims));
                 }
                 else
@@ -284,7 +318,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"SubmitClaim POST error: {ex.Message}");
-                TempData["ErrorMessage"] = "An error occurred while submitting the claim.";
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = $"An error occurred while submitting the claim: {ex.Message}";
                 return RedirectToAction(nameof(Dashboard));
             }
         }
@@ -404,6 +439,136 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             {
                 var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return Convert.ToBase64String(hashedBytes);
+            }
+        }
+
+        // Helper method to save supporting documents
+        private async Task<int> SaveSupportingDocumentsAsync(List<IFormFile> files, int claimId)
+        {
+            int uploadedCount = 0;
+            var documents = LoadDocuments();
+
+            try
+            {
+                // Create uploads directory if it doesn't exist
+                var uploadsPath = Path.Combine(_environment.WebRootPath, "uploads", "documents");
+                if (!Directory.Exists(uploadsPath))
+                {
+                    Directory.CreateDirectory(uploadsPath);
+                }
+
+                foreach (var file in files.Where(f => f != null && f.Length > 0))
+                {
+                    // Validate file size
+                    if (file.Length > MaxFileSize)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"File {file.FileName} exceeds maximum size");
+                        continue;
+                    }
+
+                    // Validate file extension
+                    var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!AllowedExtensions.Contains(fileExtension))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"File {file.FileName} has invalid extension");
+                        continue;
+                    }
+
+                    // Generate unique filename
+                    var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                    var filePath = Path.Combine(uploadsPath, fileName);
+
+                    // Save file
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    // Create document record
+                    var nextId = documents.Any() ? documents.Max(d => d.DocumentID) + 1 : 1;
+                    var document = new SupportingDocument
+                    {
+                        DocumentID = nextId,
+                        FileName = file.FileName,
+                        FilePath = $"/uploads/documents/{fileName}",
+                        FileSize = file.Length,
+                        ContentType = file.ContentType,
+                        UploadDate = DateTime.Now,
+                        ClaimID = claimId
+                    };
+
+                    documents.Add(document);
+                    uploadedCount++;
+                }
+
+                // Save all documents to file
+                if (uploadedCount > 0)
+                {
+                    SaveDocuments(documents);
+                    System.Diagnostics.Debug.WriteLine($"Saved {uploadedCount} documents for claim {claimId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving documents: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+
+            return uploadedCount;
+        }
+
+        private static List<SupportingDocument> LoadDocuments()
+        {
+            try
+            {
+                if (!System.IO.File.Exists(DocumentsDataFilePath))
+                {
+                    return new List<SupportingDocument>();
+                }
+
+                var json = System.IO.File.ReadAllText(DocumentsDataFilePath);
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    return new List<SupportingDocument>();
+                }
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+
+                var documents = JsonSerializer.Deserialize<List<SupportingDocument>>(json, options) ?? new List<SupportingDocument>();
+                return documents.Where(d => d != null && d.DocumentID > 0 && !string.IsNullOrWhiteSpace(d.FileName)).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading documents: {ex.Message}");
+                return new List<SupportingDocument>();
+            }
+        }
+
+        private static void SaveDocuments(List<SupportingDocument> documents)
+        {
+            try
+            {
+                var dataDir = Path.GetDirectoryName(DocumentsDataFilePath);
+                if (!string.IsNullOrEmpty(dataDir) && !Directory.Exists(dataDir))
+                {
+                    Directory.CreateDirectory(dataDir);
+                }
+
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+
+                var json = JsonSerializer.Serialize(documents, options);
+                System.IO.File.WriteAllText(DocumentsDataFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving documents: {ex.Message}");
             }
         }
     }

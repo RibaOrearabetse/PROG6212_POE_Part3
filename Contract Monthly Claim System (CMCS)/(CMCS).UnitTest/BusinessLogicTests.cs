@@ -1,7 +1,7 @@
 ﻿using Contract_Monthly_Claim_System__CMCS_.Models;
 using Xunit;
 
-namespace Contract_Monthly_Claim_System__CMCS_.Tests
+namespace Contract_Monthly_Claim_System__CMCS_.UnitTests
 {
     public class BusinessLogicTests
     {
