@@ -4,6 +4,20 @@
 }
 
 <div class="container-fluid">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
@@ -172,14 +186,24 @@
 
                         @if (Model.ClaimStatus == "Pending")
                         {
-                            <button class="btn btn-outline-success" onclick="updateStatus(@Model.ClaimID, 'Approved')">
-                                <i class="fas fa-check me-1"></i>
-                                Mark as Approved
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="updateStatus(@Model.ClaimID, 'Rejected')">
-                                <i class="fas fa-times me-1"></i>
-                                Mark as Rejected
-                            </button>
+                            <form asp-action="UpdateStatus" method="post" class="d-grid gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="claimId" value="@Model.ClaimID" />
+                                <input type="hidden" name="newStatus" value="Approved" />
+                                <button type="submit" class="btn btn-outline-success">
+                                    <i class="fas fa-check me-1"></i>
+                                    Mark as Approved
+                                </button>
+                            </form>
+                            <form asp-action="UpdateStatus" method="post" class="d-grid gap-2 mt-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="claimId" value="@Model.ClaimID" />
+                                <input type="hidden" name="newStatus" value="Rejected" />
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fas fa-times me-1"></i>
+                                    Mark as Rejected
+                                </button>
+                            </form>
                         }
 
                         <a asp-controller="Claim" asp-action="Index" class="btn btn-outline-secondary">
@@ -197,30 +221,6 @@
     <script>
         function refreshStatus() {
             location.reload();
-        }
-
-        function updateStatus(claimId, newStatus) {
-            if (confirm(`Are you sure you want to change the status to ${newStatus}?`)) {
-                fetch(`/Tracking/UpdateStatus?claimId=${claimId}&newStatus=${newStatus}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating the status.');
-                });
-            }
         }
 
         // Auto-refresh every 30 seconds

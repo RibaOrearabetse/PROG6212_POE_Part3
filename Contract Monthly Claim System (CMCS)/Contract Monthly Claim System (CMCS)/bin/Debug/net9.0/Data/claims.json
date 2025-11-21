@@ -137,10 +137,10 @@
     "claimDate": "2025-11-17T00:00:00",
     "claimStatus": "Approved",
     "hoursWorked": 60,
-    "hourlyRate": 450,
-    "totalAmount": 27000,
+    "hourlyRate": 5000,
+    "totalAmount": 300000,
     "submissionDate": "2025-11-17T22:08:28.1121445+02:00",
-    "lastUpdated": "2025-11-20T21:12:23.744603+02:00",
+    "lastUpdated": "2025-11-20T21:41:43.2352897+02:00",
     "statusNotes": null,
     "notes": null,
     "userID": 5,
@@ -169,5 +169,24 @@
     "statusDisplayName": "Processing Payment",
     "statusBadgeClass": "bg-info",
     "statusProgress": 90
+  },
+  {
+    "claimID": 10,
+    "claimDate": "2025-11-21T00:00:00",
+    "claimStatus": "Approved",
+    "hoursWorked": 10,
+    "hourlyRate": 450,
+    "totalAmount": 4500,
+    "submissionDate": "2025-11-21T12:26:28.615737+02:00",
+    "lastUpdated": "2025-11-21T12:42:19.6417417+02:00",
+    "statusNotes": "Status updated to Approved via Tracking page",
+    "notes": null,
+    "userID": 2,
+    "user": null,
+    "supportingDocuments": [],
+    "approvals": [],
+    "statusDisplayName": "Approved",
+    "statusBadgeClass": "bg-success",
+    "statusProgress": 100
   }
 ]

@@ -18,5 +18,15 @@
     "uploadDate": "2025-11-19T10:32:25.7784322+02:00",
     "claimID": 2,
     "claim": null
+  },
+  {
+    "documentID": 3,
+    "fileName": "Information systems 1b INSY6112 ICE task 6 ST10446648.docx",
+    "filePath": "/uploads/documents/e61ce571-f83b-4f0c-826d-0b51e89212e1.docx",
+    "fileSize": 46990,
+    "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "uploadDate": "2025-11-21T12:27:19.9326091+02:00",
+    "claimID": 10,
+    "claim": null
   }
 ]

@@ -277,10 +277,10 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         {
             return new List<User>
             {
-                new User { UserID = 1, FirstName = "Sizwe", LastName = "Mahlangu", Email = "sizwe.m@university.edu", ContactNumber = "123-456-7890", RoleID = 1 },
-                new User { UserID = 2, FirstName = "Khumo", LastName = "Thato", Email = "khumo.t@university.edu", ContactNumber = "098-765-4321", RoleID = 2 },
-                new User { UserID = 3, FirstName = "Mike", LastName = "Johnson", Email = "mike.johnson@university.edu", ContactNumber = "555-123-4567", RoleID = 1 },
-                new User { UserID = 4, FirstName = "Sarah", LastName = "Williams", Email = "sarah.williams@university.edu", ContactNumber = "444-987-6543", RoleID = 3 }
+                new User { UserID = 1, FirstName = "Sizwe", LastName = "Mahlangu", Email = "sizwe.m@university.edu", ContactNumber = "123-456-7890", RoleID = 1, HourlyRate = 450 },
+                new User { UserID = 2, FirstName = "Khumo", LastName = "Thato", Email = "khumo.t@university.edu", ContactNumber = "098-765-4321", RoleID = 2, HourlyRate = 500 },
+                new User { UserID = 3, FirstName = "Mike", LastName = "Johnson", Email = "mike.johnson@university.edu", ContactNumber = "555-123-4567", RoleID = 1, HourlyRate = 475 },
+                new User { UserID = 4, FirstName = "Sarah", LastName = "Williams", Email = "sarah.williams@university.edu", ContactNumber = "444-987-6543", RoleID = 3, HourlyRate = 520 }
             };
         }
 
@@ -320,6 +320,28 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         }
 
         // File persistence methods
+        public static decimal EnsureUserHourlyRate(int userId, decimal fallbackRate)
+        {
+            if (!_users.Any())
+            {
+                LoadUsersFromFile();
+            }
+
+            var user = _users.FirstOrDefault(u => u.UserID == userId);
+            if (user == null)
+            {
+                return fallbackRate;
+            }
+
+            if (user.RoleID == 1 && user.HourlyRate <= 0)
+            {
+                user.HourlyRate = fallbackRate;
+                SaveUsersToFile();
+            }
+
+            return user.HourlyRate > 0 ? user.HourlyRate : fallbackRate;
+        }
+
         private static void SaveUsersToFile()
         {
             try
@@ -369,6 +391,18 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                             _users = users;
                             _nextUserId = _users.Max(u => u.UserID) + 1;
                             System.Diagnostics.Debug.WriteLine($"Loaded {_users.Count} users from file: {DataFilePath}");
+
+                            // Ensure lecturers always have a valid hourly rate
+                            bool updated = false;
+                            foreach (var user in _users.Where(u => u.RoleID == 1 && u.HourlyRate <= 0))
+                            {
+                                user.HourlyRate = 450; // default rate
+                                updated = true;
+                            }
+                            if (updated)
+                            {
+                                SaveUsersToFile();
+                            }
                         }
                     }
                 }

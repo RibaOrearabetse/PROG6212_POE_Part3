@@ -168,22 +168,22 @@
                     if (item.ClaimID > 0 && item.ClaimDate.Year > 2000 && item.HoursWorked > 0 && item.HourlyRate > 0)
                     {
                         var claimUser = users?.FirstOrDefault(u => u.UserID == item.UserID);
-                        <tr>
-                            <td>@item.ClaimID</td>
-                            <td>@item.ClaimDate.ToShortDateString()</td>
-                            <td>
-                                <span class="badge @item.StatusBadgeClass">
-                                    @item.StatusDisplayName
-                                </span>
-                                @if (!string.IsNullOrEmpty(item.StatusNotes))
-                                {
-                                    <div class="small text-muted mt-1">@item.StatusNotes</div>
-                                }
-                            </td>
-                            <td>@item.HoursWorked</td>
+                    <tr>
+                        <td>@item.ClaimID</td>
+                        <td>@item.ClaimDate.ToShortDateString()</td>
+                        <td>
+                            <span class="badge @item.StatusBadgeClass">
+                                @item.StatusDisplayName
+                            </span>
+                            @if (!string.IsNullOrEmpty(item.StatusNotes))
+                            {
+                                <div class="small text-muted mt-1">@item.StatusNotes</div>
+                            }
+                        </td>
+                        <td>@item.HoursWorked</td>
                             <td>R @item.HourlyRate.ToString("N2")</td>
                             <td>R @item.TotalAmount.ToString("N2")</td>
-                            <td>@item.SubmissionDate.ToShortDateString()</td>
+                        <td>@item.SubmissionDate.ToShortDateString()</td>
                             <td>
                                 <div class="user-select-container" data-claim-id="@item.ClaimID">
                                     <select class="form-select form-select-sm user-select-dropdown" data-claim-id="@item.ClaimID" style="min-width: 200px;">
@@ -214,25 +214,25 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a asp-controller="Tracking" asp-action="Details" asp-route-id="@item.ClaimID" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-search me-1"></i>Track
-                                    </a>
-                                    <a asp-action="Details" asp-route-id="@item.ClaimID" class="btn btn-info btn-sm">
-                                        <i class="fas fa-eye me-1"></i>View
-                                    </a>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a asp-controller="Tracking" asp-action="Details" asp-route-id="@item.ClaimID" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-search me-1"></i>Track
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.ClaimID" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
                                     <a asp-action="Edit" asp-route-id="@item.ClaimID" class="btn btn-warning btn-sm" title="Edit claim and change user">
                                         <i class="fas fa-edit me-1"></i>Edit
                                     </a>
-                                    @if (item.ClaimStatus == "Pending")
-                                    {
-                                        <a asp-controller="Approval" asp-action="ProcessApproval" asp-route-claimId="@item.ClaimID" class="btn btn-success btn-sm">
-                                            <i class="fas fa-check me-1"></i>Review
-                                        </a>
-                                    }
-                                </div>
-                            </td>
+                                @if (item.ClaimStatus == "Pending")
+                                {
+                                    <a asp-controller="Approval" asp-action="ProcessApproval" asp-route-claimId="@item.ClaimID" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>Review
+                                    </a>
+                                }
+                            </div>
+                        </td>
                         </tr>
                     }
                 }

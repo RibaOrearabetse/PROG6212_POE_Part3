@@ -1,0 +1,207 @@
+@using Contract_Monthly_Claim_System__CMCS_.Models
+@{
+    ViewData["Title"] = "Lecturer Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var lecturer = ViewBag.Lecturer as User;
+    var claims = ViewBag.Claims as List<Claim> ?? new List<Claim>();
+    var monthlyHours = ViewBag.MonthlyHours as decimal? ?? 0;
+    var remainingHours = ViewBag.RemainingHours as decimal? ?? 180;
+    var maxHours = ViewBag.MaxHoursPerMonth as int? ?? 180;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                        Lecturer Dashboard
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Welcome, <strong>@(lecturer?.FirstName) @(lecturer?.LastName)</strong>
+                    </p>
+                </div>
+                <div>
+                    <a asp-action="SubmitClaim" class="btn btn-success me-2">
+                        <i class="fas fa-plus me-1"></i>Submit New Claim
+                    </a>
+                    <a asp-action="MyClaims" class="btn btn-info me-2">
+                        <i class="fas fa-list me-1"></i>My Claims
+                    </a>
+                    <a asp-action="Logout" class="btn btn-outline-secondary">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Monthly Hours</h6>
+                            <h3 class="mb-0">@monthlyHours.ToString("F1")</h3>
+                            <small>of @maxHours hours</small>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Remaining Hours</h6>
+                            <h3 class="mb-0">@remainingHours.ToString("F1")</h3>
+                            <small>available this month</small>
+                        </div>
+                        <i class="fas fa-hourglass-half fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Hourly Rate</h6>
+                            <h3 class="mb-0">R @(lecturer?.HourlyRate.ToString("N2") ?? "0.00")</h3>
+                            <small>set by HR</small>
+                        </div>
+                        <i class="fas fa-rand-sign fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total Claims</h6>
+                            <h3 class="mb-0">@claims.Count</h3>
+                            <small>all time</small>
+                        </div>
+                        <i class="fas fa-file-invoice fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Hours Progress Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Monthly Hours Progress (@DateTime.Now.ToString("MMMM yyyy"))
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var percentage = maxHours > 0 ? (monthlyHours / maxHours * 100) : 0;
+                        var progressColor = percentage >= 90 ? "bg-danger" : percentage >= 75 ? "bg-warning" : "bg-success";
+                    }
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar @progressColor progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             style="width: @(Math.Min(100, percentage))%"
+                             aria-valuenow="@percentage" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            @monthlyHours.ToString("F1") / @maxHours hours (@percentage.ToString("F1")%)
+                        </div>
+                    </div>
+                    @if (remainingHours <= 0)
+                    {
+                        <div class="alert alert-warning mt-2 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You have reached the maximum limit of @maxHours hours for this month.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Claims -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Recent Claims
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (claims.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Claim ID</th>
+                                        <th>Date</th>
+                                        <th>Hours</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in claims.Take(5))
+                                    {
+                                        <tr>
+                                            <td>#@claim.ClaimID</td>
+                                            <td>@claim.ClaimDate.ToString("yyyy-MM-dd")</td>
+                                            <td>@claim.HoursWorked</td>
+                                            <td class="fw-bold text-success">R @claim.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <span class="badge @claim.StatusBadgeClass">
+                                                    @claim.StatusDisplayName
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="Tracking" asp-action="Details" asp-route-id="@claim.ClaimID" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>Track
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a asp-action="MyClaims" class="btn btn-outline-primary">
+                                View All Claims <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You haven't submitted any claims yet.
+                            <a asp-action="SubmitClaim" class="btn btn-sm btn-success ms-2">
+                                Submit Your First Claim
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -21,8 +21,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             }
 
             // Filter out corrupted/empty approvals
-            var validApprovals = _approvals.Where(a => 
-                a.ApprovalID > 0 && 
+            var validApprovals = _approvals.Where(a =>
+                a.ApprovalID > 0 &&
                 a.ClaimID > 0 &&
                 a.ApprovalDate != default(DateTime) &&
                 a.ApprovalDate.Year > 2000
@@ -67,12 +67,24 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 
             // Filter to only show approvals for claims that are "Approved" (case-insensitive)
             var approvedClaims = allClaims
-                .Where(c => c != null && 
-                           !string.IsNullOrEmpty(c.ClaimStatus) && 
+                .Where(c => c != null &&
+                           !string.IsNullOrEmpty(c.ClaimStatus) &&
                            c.ClaimStatus.Trim().Equals("Approved", StringComparison.OrdinalIgnoreCase))
                 .Select(c => c.ClaimID)
                 .ToHashSet();
-            
+
+            // Remove any approvals that no longer belong to approved claims
+            var removedCount = _approvals.RemoveAll(a => !approvedClaims.Contains(a.ClaimID));
+            if (removedCount > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Removed {removedCount} approvals for non-approved claims");
+                if (_approvals.Any())
+                {
+                    _nextApprovalId = _approvals.Max(a => a.ApprovalID) + 1;
+                }
+                SaveApprovalsToFile();
+            }
+
             System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Total claims loaded: {allClaims?.Count ?? 0}");
             System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Approved claims found: {approvedClaims.Count}");
             foreach (var claimId in approvedClaims)
@@ -80,12 +92,12 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 var claim = allClaims.FirstOrDefault(c => c.ClaimID == claimId);
                 System.Diagnostics.Debug.WriteLine($"  - Claim ID {claimId}: Status = '{claim?.ClaimStatus}'");
             }
-            
+
             var approvals = _approvals
                 .Where(a => a != null && approvedClaims.Contains(a.ClaimID)) // Only approvals for approved claims
                 .OrderByDescending(a => a.ApprovalDate)
                 .ToList();
-            
+
             System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Total approvals: {_approvals.Count}");
             System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Returning {approvals.Count} approvals for approved claims");
             foreach (var approval in approvals)
@@ -93,7 +105,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 var claim = allClaims.FirstOrDefault(c => c.ClaimID == approval.ClaimID);
                 System.Diagnostics.Debug.WriteLine($"  - Approval ID {approval.ApprovalID} for Claim ID {approval.ClaimID}: Claim Status = '{claim?.ClaimStatus}'");
             }
-            
+
             return View(approvals);
         }
 
@@ -106,6 +118,14 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 if (!_approvals.Any())
                 {
                     LoadApprovalsFromFile();
+                }
+
+                // Ensure claim is actually approved before creating record
+                var claim = ClaimController.GetAllClaims().FirstOrDefault(c => c.ClaimID == claimId);
+                if (claim == null || !string.Equals(claim.ClaimStatus, "Approved", StringComparison.OrdinalIgnoreCase))
+                {
+                    System.Diagnostics.Debug.WriteLine($"CreateApprovalRecord skipped: Claim {claimId} is not approved.");
+                    return;
                 }
 
                 // Check if approval already exists for this claim
@@ -280,7 +300,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 
                 // Get the claim from ClaimController's list to ensure we're updating the right instance
                 var claim = allClaims?.FirstOrDefault(c => c.ClaimID == claimId);
-                
+
                 if (claim != null)
                 {
                     // Update claim status in the shared claim storage
@@ -330,7 +350,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
 
                 // Get the claim from ClaimController's list to ensure we're updating the right instance
                 var claim = allClaims?.FirstOrDefault(c => c.ClaimID == claimId);
-                
+
                 if (claim != null)
                 {
                     // Update claim status in the shared claim storage
@@ -364,7 +384,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
         {
             // Get all actual claims from the shared claim storage (regardless of status)
             var allClaims = GetSharedClaims();
-            
+
             // Filter out only corrupted/empty claims (NOT by status - we want all statuses)
             var validClaims = allClaims.Where(c =>
                 c.ClaimID > 0 &&
@@ -394,13 +414,13 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             // Always load fresh data from ClaimController to ensure we get all created claims
             // This ensures synchronization between ClaimController and ApprovalController
             var allClaims = ClaimController.GetAllClaims();
-            
+
             if (allClaims != null && allClaims.Any())
             {
                 System.Diagnostics.Debug.WriteLine($"GetSharedClaims: Loaded {allClaims.Count} claims from ClaimController");
                 return allClaims;
             }
-            
+
             // Fallback: if ClaimController returns empty, try loading directly from file
             LoadClaimsFromFile();
             if (_claims.Any())
@@ -408,7 +428,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 System.Diagnostics.Debug.WriteLine($"GetSharedClaims: Loaded {_claims.Count} claims from file directly");
                 return _claims;
             }
-            
+
             // Only initialize with sample data if file doesn't exist (first time)
             bool fileExists = System.IO.File.Exists(ClaimsFilePath);
             if (!fileExists)
@@ -418,7 +438,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 SaveClaimsToFile();
                 System.Diagnostics.Debug.WriteLine($"GetSharedClaims: Initialized with {_claims.Count} sample claims");
             }
-            
+
             return _claims;
         }
 

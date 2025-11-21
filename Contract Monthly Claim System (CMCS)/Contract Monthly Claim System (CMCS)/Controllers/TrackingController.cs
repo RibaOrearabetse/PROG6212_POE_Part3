@@ -50,7 +50,9 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             });
         }
 
-        public IActionResult UpdateStatus(int claimId, string newStatus, string notes = null)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateStatus(int claimId, string newStatus, string notes = null, bool returnJson = false)
         {
             try
             {
@@ -66,26 +68,46 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 // Update claim status in the shared data
                 claim.ClaimStatus = newStatus;
                 claim.LastUpdated = DateTime.Now;
-                claim.StatusNotes = notes;
+                claim.StatusNotes = string.IsNullOrWhiteSpace(notes)
+                    ? $"Status updated to {newStatus} via Tracking page"
+                    : notes;
 
                 // Save the updated data to file
                 ClaimController.SaveClaimsToFile();
 
+                // If approved, ensure an approval record exists
+                if (newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                {
+                    ApprovalController.CreateApprovalRecord(claimId, claim.StatusNotes ?? "Approved via Tracking page", approverId: 1);
+                }
+
                 System.Diagnostics.Debug.WriteLine($"TrackingController.UpdateStatus - Updated claim {claimId} to {newStatus}");
 
-                return Json(new
+                if (returnJson || Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                 {
-                    success = true,
-                    message = $"Claim status updated to {newStatus}",
-                    statusDisplayName = claim.StatusDisplayName,
-                    statusBadgeClass = claim.StatusBadgeClass,
-                    statusProgress = claim.StatusProgress
-                });
+                    return Json(new
+                    {
+                        success = true,
+                        message = $"Claim status updated to {newStatus}",
+                        statusDisplayName = claim.StatusDisplayName,
+                        statusBadgeClass = claim.StatusBadgeClass,
+                        statusProgress = claim.StatusProgress
+                    });
+                }
+
+                TempData["SuccessMessage"] = $"Claim #{claimId} has been marked as {newStatus}.";
+                return RedirectToAction(nameof(Details), new { id = claimId });
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"TrackingController.UpdateStatus - Error: {ex.Message}");
-                return Json(new { success = false, message = $"Error updating status: {ex.Message}" });
+                if (returnJson || Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = $"Error updating status: {ex.Message}" });
+                }
+
+                TempData["ErrorMessage"] = "An error occurred while updating the claim status.";
+                return RedirectToAction(nameof(Details), new { id = claimId });
             }
         }
 

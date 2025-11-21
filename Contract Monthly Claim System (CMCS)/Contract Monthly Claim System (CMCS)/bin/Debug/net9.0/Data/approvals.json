@@ -52,5 +52,14 @@
     "claim": null,
     "approverID": 1,
     "approver": null
+  },
+  {
+    "approvalID": 7,
+    "approvalDate": "2025-11-21T12:42:19.6875843+02:00",
+    "comments": "Status updated to Approved via Tracking page",
+    "claimID": 10,
+    "claim": null,
+    "approverID": 1,
+    "approver": null
   }
 ]

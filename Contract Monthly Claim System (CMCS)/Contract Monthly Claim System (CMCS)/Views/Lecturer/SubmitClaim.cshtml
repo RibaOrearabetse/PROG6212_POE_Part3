@@ -1,0 +1,168 @@
+@model Contract_Monthly_Claim_System__CMCS_.Models.ClaimCreateViewModel
+@using Contract_Monthly_Claim_System__CMCS_.Models
+@{
+    ViewData["Title"] = "Submit Claim";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var lecturer = ViewBag.Lecturer as User;
+    var monthlyHours = ViewBag.MonthlyHours as decimal? ?? 0;
+    var remainingHours = ViewBag.RemainingHours as decimal? ?? 180;
+    var maxHours = ViewBag.MaxHoursPerMonth as int? ?? 180;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>
+                        Submit New Claim
+                    </h4>
+                </div>
+                <div class="card-body">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Lecturer Info Display -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-user me-2"></i>Your Information (Set by HR)
+                        </h6>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Name:</strong><br>
+                                @(lecturer?.FirstName) @(lecturer?.LastName)
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Email:</strong><br>
+                                @(lecturer?.Email)
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Hourly Rate:</strong><br>
+                                <span class="fw-bold text-success">R @(lecturer?.HourlyRate.ToString("N2") ?? "0.00")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Hours Remaining -->
+                    <div class="alert @(remainingHours <= 0 ? "alert-warning" : "alert-success")">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Monthly Hours:</strong> @monthlyHours.ToString("F1") / @maxHours hours used. 
+                        <strong>Remaining:</strong> @remainingHours.ToString("F1") hours
+                    </div>
+
+                    <form asp-action="SubmitClaim" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="UserID" />
+                        <input type="hidden" asp-for="HourlyRate" />
+
+                        <div class="mb-3">
+                            <label asp-for="ClaimDate" class="form-label fw-bold">
+                                <i class="fas fa-calendar me-1 text-primary"></i>
+                                Claim Date <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ClaimDate" type="date" class="form-control" required>
+                            <span asp-validation-for="ClaimDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="HoursWorked" class="form-label fw-bold">
+                                <i class="fas fa-clock me-1 text-primary"></i>
+                                Hours Worked <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="HoursWorked" type="number" step="0.1" min="0.1" max="@remainingHours" 
+                                   class="form-control" id="hoursWorked" required 
+                                   placeholder="Enter hours worked (max: @remainingHours)">
+                            <span asp-validation-for="HoursWorked" class="text-danger"></span>
+                            <div class="form-text">
+                                Maximum @remainingHours hours remaining this month
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-rand-sign me-1 text-primary"></i>
+                                Hourly Rate (ZAR)
+                            </label>
+                            <input type="text" class="form-control" value="R @(lecturer?.HourlyRate.ToString("N2") ?? "0.00")" 
+                                   readonly style="background-color: #e9ecef;">
+                            <div class="form-text">
+                                <i class="fas fa-lock me-1"></i>Set by HR - cannot be changed
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calculator me-1 text-primary"></i>
+                                Total Amount (ZAR)
+                            </label>
+                            <input type="text" class="form-control fw-bold text-success" 
+                                   id="totalAmount" readonly 
+                                   value="R 0.00" 
+                                   style="font-size: 1.2em; background-color: #e9ecef;">
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>Calculated automatically
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label fw-bold">
+                                <i class="fas fa-sticky-note me-1 text-primary"></i>
+                                Notes / Documentation
+                            </label>
+                            <textarea asp-for="Notes" class="form-control" rows="4" 
+                                      placeholder="Enter any additional notes or documentation details..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Dashboard" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane me-1"></i>Submit Claim
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-calculate total amount when hours change
+        const hoursInput = document.getElementById('hoursWorked');
+        const totalAmountInput = document.getElementById('totalAmount');
+        const hourlyRate = @(lecturer?.HourlyRate ?? 0);
+
+        function calculateTotal() {
+            const hours = parseFloat(hoursInput.value) || 0;
+            const total = hours * hourlyRate;
+            totalAmountInput.value = 'R ' + total.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        hoursInput.addEventListener('input', calculateTotal);
+        
+        // Calculate on page load
+        calculateTotal();
+    </script>
+}
+

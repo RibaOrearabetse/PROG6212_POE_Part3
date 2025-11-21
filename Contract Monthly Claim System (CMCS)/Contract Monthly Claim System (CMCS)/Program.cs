@@ -27,6 +27,15 @@ namespace Contract_Monthly_Claim_System__CMCS_
             });
             builder.Services.AddRazorPages();
 
+            // Add session support for lecturer login
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -40,6 +49,7 @@ namespace Contract_Monthly_Claim_System__CMCS_
             app.UseHttpsRedirection();
             app.UseRouting();
 
+            app.UseSession(); // Enable session middleware
             app.UseAuthorization();
 
             // Ensure database is created (optional - removes if using migrations)

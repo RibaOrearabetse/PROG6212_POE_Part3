@@ -176,7 +176,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const claimSelectEl = document.getElementById('claimId');
             if (claimSelectEl) {
-                loadDocuments();
+            loadDocuments();
                 claimSelectEl.addEventListener('change', loadDocuments);
             } else {
                 document.getElementById('documentsList').innerHTML =

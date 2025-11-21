@@ -1,0 +1,152 @@
+@using Contract_Monthly_Claim_System__CMCS_.Models
+@{
+    ViewData["Title"] = "My Claims";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var claims = ViewBag.Claims as List<Claim> ?? new List<Claim>();
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-file-invoice me-2 text-primary"></i>
+                        My Claims
+                    </h2>
+                    <p class="text-muted mb-0">Track all your submitted claims through the approval process</p>
+                </div>
+                <div>
+                    <a asp-action="SubmitClaim" class="btn btn-success me-2">
+                        <i class="fas fa-plus me-1"></i>Submit New Claim
+                    </a>
+                    <a asp-action="Dashboard" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                    </a>
+                    <a asp-action="Logout" class="btn btn-outline-secondary">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (claims.Any())
+    {
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    All Claims (@claims.Count total)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Claim ID</th>
+                                <th>Claim Date</th>
+                                <th>Hours Worked</th>
+                                <th>Hourly Rate</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Submission Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var claim in claims)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>#@claim.ClaimID</strong>
+                                    </td>
+                                    <td>@claim.ClaimDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@claim.HoursWorked</td>
+                                    <td>R @claim.HourlyRate.ToString("N2")</td>
+                                    <td class="fw-bold text-success">R @claim.TotalAmount.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge @claim.StatusBadgeClass">
+                                            @claim.StatusDisplayName
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(claim.StatusNotes))
+                                        {
+                                            <br><small class="text-muted">@claim.StatusNotes</small>
+                                        }
+                                    </td>
+                                    <td>@claim.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <a asp-controller="Tracking" asp-action="Details" asp-route-id="@claim.ClaimID" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-search me-1"></i>Track
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Total Amount:</td>
+                                <td class="fw-bold text-success">
+                                    R @claims.Sum(c => c.TotalAmount).ToString("N2")
+                                </td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Summary -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body text-center">
+                        <h3>@claims.Count(c => c.ClaimStatus == "Pending")</h3>
+                        <p class="mb-0">Pending</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>@claims.Count(c => c.ClaimStatus == "Approved")</h3>
+                        <p class="mb-0">Approved</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3>@claims.Count(c => c.ClaimStatus == "Rejected")</h3>
+                        <p class="mb-0">Rejected</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3>@claims.Count(c => c.ClaimStatus == "Processing")</h3>
+                        <p class="mb-0">Processing</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-file-invoice fa-4x text-muted mb-3"></i>
+                <h4>No Claims Found</h4>
+                <p class="text-muted">You haven't submitted any claims yet.</p>
+                <a asp-action="SubmitClaim" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus me-1"></i>Submit Your First Claim
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
