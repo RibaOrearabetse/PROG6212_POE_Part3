@@ -1,0 +1,207 @@
+@using Contract_Monthly_Claim_System__CMCS_.Models
+@using Contract_Monthly_Claim_System__CMCS_.Controllers
+@{
+    ViewData["Title"] = "Academic Manager Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var allClaims = ViewBag.AllClaims as List<Claim> ?? new List<Claim>();
+    var recentApprovals = ViewBag.RecentApprovals as List<Approval> ?? new List<Approval>();
+    var users = UserController.GetAllUsers();
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-user-tie me-2 text-primary"></i>
+                        Academic Manager Dashboard
+                    </h2>
+                    <p class="text-muted mb-0">Welcome, <strong>@ViewBag.ManagerName</strong></p>
+                </div>
+                <div>
+                    <a asp-controller="Admin" asp-action="Logout" asp-route-role="Manager" class="btn btn-outline-secondary">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body">
+                    <h6>Total Claims</h6>
+                    <h3 class="mb-0">@ViewBag.TotalClaims</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow-sm">
+                <div class="card-body">
+                    <h6>Processing</h6>
+                    <h3 class="mb-0">@ViewBag.ProcessingClaims</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <h6>Completed / Approved</h6>
+                    <h3 class="mb-0">@ViewBag.CompletedClaims</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow-sm">
+                <div class="card-body">
+                    <h6>Rejected</h6>
+                    <h3 class="mb-0">@ViewBag.RejectedClaims</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-lg mb-4" style="border: 2px solid #17a2b8 !important;">
+        <div class="card-header text-white" style="background-color: #17a2b8 !important; padding: 15px !important;">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-thumbs-up me-2"></i>
+                Latest Approvals
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (recentApprovals.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead style="background-color: #d1ecf1 !important;">
+                            <tr>
+                                <th>Approval ID</th>
+                                <th>Claim ID</th>
+                                <th>Approval Date</th>
+                                <th>Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var approval in recentApprovals)
+                            {
+                                <tr>
+                                    <td>#@approval.ApprovalID</td>
+                                    <td>@approval.ClaimID</td>
+                                    <td>@approval.ApprovalDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@approval.Comments</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-4 text-center text-muted">
+                    <i class="fas fa-info-circle me-2"></i>No approvals recorded yet.
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-lg border-primary" style="border-width: 2px !important;">
+        <div class="card-header text-white" style="background-color: #0d6efd !important; padding: 15px !important;">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-list me-2"></i>All Claims (@allClaims.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (allClaims.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead style="background-color: #e3f2fd !important;">
+                            <tr>
+                                <th>Claim ID</th>
+                                <th>Claim Date</th>
+                                <th>User</th>
+                                <th>Hours Worked</th>
+                                <th>Hourly Rate</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Submission Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var claim in allClaims)
+                            {
+                                var claimUser = users?.FirstOrDefault(u => u.UserID == claim.UserID);
+                                <tr>
+                                    <td>
+                                        <strong>#@claim.ClaimID</strong>
+                                    </td>
+                                    <td>@claim.ClaimDate.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        @if (claimUser != null)
+                                        {
+                                            <a asp-controller="User" asp-action="Details" asp-route-id="@claimUser.UserID" class="text-decoration-none">
+                                                <i class="fas fa-user me-1"></i>
+                                                <strong>@claimUser.FirstName @claimUser.LastName</strong>
+                                                <br />
+                                                <small class="text-muted">ID: @claim.UserID</small>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                Invalid User (ID: @claim.UserID)
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>@claim.HoursWorked</td>
+                                    <td>R @claim.HourlyRate.ToString("N2")</td>
+                                    <td class="fw-bold text-success">R @claim.TotalAmount.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge @claim.StatusBadgeClass">
+                                            @claim.StatusDisplayName
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(claim.StatusNotes))
+                                        {
+                                            <br><small class="text-muted">@claim.StatusNotes</small>
+                                        }
+                                    </td>
+                                    <td>@claim.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-controller="Tracking" asp-action="Details" asp-route-id="@claim.ClaimID" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-search me-1"></i>Track
+                                            </a>
+                                            <a asp-controller="Claim" asp-action="Details" asp-route-id="@claim.ClaimID" class="btn btn-info btn-sm">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot style="background-color: #e3f2fd !important;">
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold">Total Amount:</td>
+                                <td class="fw-bold text-success" style="font-size: 1.1em;">
+                                    R @allClaims.Sum(c => c.TotalAmount).ToString("N2")
+                                </td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-4 text-center text-muted">
+                    <i class="fas fa-info-circle me-2"></i>No claims found.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+

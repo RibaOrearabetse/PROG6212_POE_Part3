@@ -54,16 +54,12 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             }
 
             // Always get fresh claims data to ensure we have the latest statuses
-            var allClaims = ClaimController.GetAllClaims();
-            if (allClaims == null || !allClaims.Any())
+            var allClaims = ClaimController.GetAllClaims() ?? new List<Claim>();
+            if (!allClaims.Any())
             {
                 LoadClaimsFromFile();
-                allClaims = ClaimController.GetAllClaims();
+                allClaims = ClaimController.GetAllClaims() ?? new List<Claim>();
             }
-
-            // Force reload to get absolute latest data
-            ClaimController.GetAllClaims(); // This ensures data is loaded
-            allClaims = ClaimController.GetAllClaims();
 
             // Filter to only show approvals for claims that are "Approved" (case-insensitive)
             var approvedClaims = allClaims
@@ -74,7 +70,7 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 .ToHashSet();
 
             // Remove any approvals that no longer belong to approved claims
-            var removedCount = _approvals.RemoveAll(a => !approvedClaims.Contains(a.ClaimID));
+            var removedCount = _approvals.RemoveAll(a => a != null && !approvedClaims.Contains(a.ClaimID));
             if (removedCount > 0)
             {
                 System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Removed {removedCount} approvals for non-approved claims");
@@ -85,11 +81,11 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 SaveApprovalsToFile();
             }
 
-            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Total claims loaded: {allClaims?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Total claims loaded: {allClaims.Count}");
             System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Approved claims found: {approvedClaims.Count}");
             foreach (var claimId in approvedClaims)
             {
-                var claim = allClaims.FirstOrDefault(c => c.ClaimID == claimId);
+                var claim = allClaims.FirstOrDefault(c => c != null && c.ClaimID == claimId);
                 System.Diagnostics.Debug.WriteLine($"  - Claim ID {claimId}: Status = '{claim?.ClaimStatus}'");
             }
 
@@ -102,11 +98,35 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             System.Diagnostics.Debug.WriteLine($"ApprovalController.Index - Returning {approvals.Count} approvals for approved claims");
             foreach (var approval in approvals)
             {
-                var claim = allClaims.FirstOrDefault(c => c.ClaimID == approval.ClaimID);
+                var claim = allClaims.FirstOrDefault(c => c != null && c.ClaimID == approval.ClaimID);
                 System.Diagnostics.Debug.WriteLine($"  - Approval ID {approval.ApprovalID} for Claim ID {approval.ClaimID}: Claim Status = '{claim?.ClaimStatus}'");
             }
 
             return View(approvals);
+        }
+
+        // Static method to get all approvals (can be called from other controllers)
+        public static List<Approval> GetAllApprovals()
+        {
+            // Ensure data is loaded
+            if (!_approvals.Any())
+            {
+                LoadApprovalsFromFile();
+            }
+
+            // Get all claims to filter only approved ones
+            var allClaims = ClaimController.GetAllClaims() ?? new List<Claim>();
+            var approvedClaimIds = allClaims
+                .Where(c => c != null && 
+                           !string.IsNullOrEmpty(c.ClaimStatus) && 
+                           c.ClaimStatus.Trim().Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                .Select(c => c.ClaimID)
+                .ToHashSet();
+
+            // Return only approvals for approved claims
+            return _approvals
+                .Where(a => a != null && approvedClaimIds.Contains(a.ClaimID))
+                .ToList();
         }
 
         // Static method to create an approval record (can be called from other controllers)
@@ -121,7 +141,8 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
                 }
 
                 // Ensure claim is actually approved before creating record
-                var claim = ClaimController.GetAllClaims().FirstOrDefault(c => c.ClaimID == claimId);
+                var allClaims = ClaimController.GetAllClaims() ?? new List<Claim>();
+                var claim = allClaims.FirstOrDefault(c => c != null && c.ClaimID == claimId);
                 if (claim == null || !string.Equals(claim.ClaimStatus, "Approved", StringComparison.OrdinalIgnoreCase))
                 {
                     System.Diagnostics.Debug.WriteLine($"CreateApprovalRecord skipped: Claim {claimId} is not approved.");

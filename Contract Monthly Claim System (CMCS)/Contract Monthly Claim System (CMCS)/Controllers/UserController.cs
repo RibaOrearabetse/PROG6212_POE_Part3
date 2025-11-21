@@ -273,6 +273,52 @@ namespace Contract_Monthly_Claim_System__CMCS_.Controllers
             }
         }
 
+        // POST: User/Delete/5 - Handles user deletion
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                // Load data from file if not already loaded
+                if (!_users.Any())
+                {
+                    LoadUsersFromFile();
+                }
+
+                var user = _users.FirstOrDefault(u => u.UserID == id);
+                if (user == null)
+                {
+                    TempData["ErrorMessage"] = "User not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Check if user has associated claims
+                var allClaims = ClaimController.GetAllClaims() ?? new List<Claim>();
+                var hasClaims = allClaims.Any(c => c.UserID == id);
+                
+                if (hasClaims)
+                {
+                    TempData["ErrorMessage"] = $"Cannot delete user '{user.FirstName} {user.LastName}' because they have associated claims. Please reassign or delete the claims first.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Remove the user
+                _users.Remove(user);
+                SaveUsersToFile();
+
+                TempData["SuccessMessage"] = $"User '{user.FirstName} {user.LastName}' has been deleted successfully.";
+                System.Diagnostics.Debug.WriteLine($"User {id} ({user.FirstName} {user.LastName}) deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting user: {ex.Message}");
+                TempData["ErrorMessage"] = "An error occurred while deleting the user.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         private static List<User> GetSampleUsers()
         {
             return new List<User>

@@ -61,14 +61,14 @@
             @foreach (var document in Model)
             {
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-light">
+                    <div class="card shadow-lg h-100" style="border: 2px solid #0dcaf0 !important;">
+                        <div class="card-header text-white" style="background-color: #0dcaf0 !important; padding: 12px !important;">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 text-primary text-truncate" title="@document.FileName">
+                                <h6 class="mb-0 fw-bold text-white text-truncate" title="@document.FileName">
                                     <i class="fas fa-file me-2"></i>
                                     @document.FileName
                                 </h6>
-                                <span class="badge bg-info">
+                                <span class="badge bg-light text-dark">
                                     @(document.ClaimID > 0 ? $"Claim #{document.ClaimID}" : "Unassigned")
                                 </span>
                             </div>

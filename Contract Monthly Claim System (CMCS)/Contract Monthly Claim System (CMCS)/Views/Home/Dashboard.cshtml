@@ -42,10 +42,16 @@
 
 <div class="row mt-4">
     <div class="col-md-6">
-        <h4>Recent Claims</h4>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
+        <div class="card shadow-lg mb-4" style="border: 2px solid #198754 !important;">
+            <div class="card-header text-white" style="background-color: #198754 !important; padding: 15px !important;">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-list me-2"></i>Recent Claims
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead style="background-color: #d1e7dd !important;">
                     <tr>
                         <th>Claim ID</th>
                         <th>Date</th>
@@ -91,11 +97,19 @@
                     }
                 </tbody>
             </table>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col-md-6">
-        <h4>Quick Actions</h4>
-        <div class="list-group">
+        <div class="card shadow-lg" style="border: 2px solid #0dcaf0 !important;">
+            <div class="card-header text-white" style="background-color: #0dcaf0 !important; padding: 15px !important;">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
             <a href="@Url.Action("Create", "Claim")" class="list-group-item list-group-item-action">
                 <strong>Submit New Claim</strong><br>
                 <small>Create a new monthly claim submission</small>
@@ -108,6 +122,8 @@
                 <strong>Manage Users</strong><br>
                 <small>Add or edit system users</small>
             </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
