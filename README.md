@@ -390,9 +390,6 @@ This project is developed for academic purposes as part of PROG6212 - Programmin
 - Font Awesome for the icon library
 - xUnit team for the testing framework
 
-## 📞 Support
-
-For issues, questions, or contributions, please refer to the project documentation or contact the development team.
 
 ---
 
